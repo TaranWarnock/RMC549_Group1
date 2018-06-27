@@ -35,6 +35,33 @@ void getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, char* title){
   Serial.println("");
 }
 
+void displayCalStatus(void)
+{
+  /* Get the four calibration values (0..3) */
+  /* Any sensor data reporting 0 should be ignored, */
+  /* 3 means 'fully calibrated" */
+  uint8_t system, gyro, accel, mag;
+  system = gyro = accel = mag = 0;
+  bno.getCalibration(&system, &gyro, &accel, &mag);
+  /* The data should be ignored until the system calibration is > 0 */
+  Serial.print("\t");
+  if (!system)
+  {
+  Serial.print("! ");
+  }
+  /* Display the individual values */
+  Serial.print("Calibration: Sys:");
+  Serial.print(system, DEC);
+  Serial.print(" G:");
+  Serial.print(gyro, DEC);
+  Serial.print(" A:");
+  Serial.print(accel, DEC);
+  Serial.print(" M:");
+  Serial.println(mag, DEC);
+}
+
+
+
 void loop(void) 
 {
   getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "Acceleration");
@@ -48,6 +75,7 @@ void loop(void)
   Serial.print("\tCurrent Temperature: ");
   Serial.print(temp);
   Serial.println(" C");
+  displayCalStatus();
   
   delay(1500);
 }
