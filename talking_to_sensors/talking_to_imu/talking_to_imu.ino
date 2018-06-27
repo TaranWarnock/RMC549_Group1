@@ -36,13 +36,6 @@ void getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, char* title){
   Serial.println("");
 }
 
-void getT(){
-  int temp = bno.getTemp();
-  Serial.print("\tCurrent Temperature: ");
-  Serial.print(temp);
-  Serial.println(" C");
-}
-
 void loop(void) 
 {
   getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "Acceleration");
