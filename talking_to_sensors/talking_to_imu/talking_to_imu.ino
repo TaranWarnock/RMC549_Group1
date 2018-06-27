@@ -24,8 +24,7 @@ void setup(void)
 }
 
 void getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, char* title){
-  Adafruit_BNO055::adafruit_vector_type_t vec = sensor_type;
-  imu::Vector<3> data_vector = bno.getVector(vec);
+  imu::Vector<3> data_vector = bno.getVector(sensor_type);
   Serial.print(title);
   Serial.print(": X: ");
   Serial.print(data_vector[0]);
