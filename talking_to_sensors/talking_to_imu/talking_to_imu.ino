@@ -23,32 +23,39 @@ void setup(void)
   bno.setExtCrystalUse(true);
 }
 
-void loop(void) 
-{
-  // Get a new sensor event (this is what should be stored in memory for each timestamp)
-  sensors_event_t event; 
-  bno.getEvent(&event);
-  
-  /* Display the floating point data */
-  Serial.print("X: ");
-  Serial.print(event.orientation.x, 4);
-  Serial.print("\tY: ");
-  Serial.print(event.orientation.y, 4);
-  Serial.print("\tZ: ");
-  Serial.print(event.orientation.z, 4);
-  Serial.print("\tGX: ");
-  Serial.print(event.gyro.x, 4);
-  Serial.print("\tGY: ");
-  Serial.print(event.gyro.y, 4);
-  Serial.print("\tGZ: ");
-  Serial.print(event.gyro.z, 4);
-  // display temperature (accurracy is 1 degree) 
+void getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, char* title){
+  Adafruit_BNO055::adafruit_vector_type_t vec = sensor_type;
+  imu::Vector<3> data_vector = bno.getVector(vec);
+  Serial.print(title);
+  Serial.print(": X: ");
+  Serial.print(data_vector[0]);
+  Serial.print("  Y: ");
+  Serial.print(data_vector[1]);
+  Serial.print("  Z: ");
+  Serial.print(data_vector[2]);
+  Serial.println("");
+}
+
+void getT(){
   int temp = bno.getTemp();
   Serial.print("\tCurrent Temperature: ");
   Serial.print(temp);
   Serial.println(" C");
-  Serial.println("");
+}
 
+void loop(void) 
+{
+  getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "Acceleration");
+  getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gyroscope");
+  getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "Magnetometer");
+  getvec(Adafruit_BNO055::VECTOR_EULER, "Euler");
+  getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "LinearAccel");
+  getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Gravity");
+  // get temperature and print to consol (accuracy of sensor is 1 degree)
+  int temp = bno.getTemp();
+  Serial.print("\tCurrent Temperature: ");
+  Serial.print(temp);
+  Serial.println(" C");
   
-  delay(100);
+  delay(1500);
 }
