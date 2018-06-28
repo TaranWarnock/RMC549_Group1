@@ -1,5 +1,5 @@
 from Flight_Software_Package.Common.FSW_Common import *
-from Flight_Software_Package.Serial_Communication.serial_sommunication import SerialCommunication
+from Flight_Software_Package.Serial_Communication.serial_communication import SerialCommunication
 
 class CommandAndControl(FlightSoftwareParent):
     """
