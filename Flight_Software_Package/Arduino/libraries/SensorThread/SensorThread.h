@@ -23,6 +23,10 @@ class SensorThread : public Thread {
         String getSensorData() { 
             return sensorData;
         }
+
+        String getSensorName() {
+            return sensorName;
+        }
 };
 
 class GPSSensorThread : public SensorThread {
