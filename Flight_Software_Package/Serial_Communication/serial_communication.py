@@ -48,7 +48,7 @@ class SerialCommunication(FlightSoftwareParent):
                 pass
         return result
 
-    def readline_from_serial(self, port: str, baudrate: int = 9600, timeout: float = 1) -> None:
+    def readline_from_serial(self, port: str, baudrate: int = 19200, timeout: float = 1) -> None:
         """
         This function will read data on the port up to a EOL char and return it.
 
@@ -69,7 +69,7 @@ class SerialCommunication(FlightSoftwareParent):
         except Exception as err:
             self.log_error(str(err))
 
-    def write_to_serial(self, message: str, port: str, baudrate: int = 9600, timeout: float = 1) -> None:
+    def write_to_serial(self, message: str, port: str, baudrate: int = 19200, timeout: float = 1) -> None:
         """
         This function will write data to the port during serial communication.
 
