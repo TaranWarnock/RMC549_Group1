@@ -4,7 +4,7 @@
 #include <Thread.h>
 
 class SensorThread : public Thread {
-    private:
+    protected:
         String sensorName;
         String sensorData;
 
