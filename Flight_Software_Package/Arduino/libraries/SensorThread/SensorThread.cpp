@@ -8,7 +8,16 @@ void SensorThread::run() {
 
 // Implement the code for a single GPS reading event here
 void GPSSensorThread::readFromSensor() {
-    // read from sensor and store in buffer
-    Serial.println("GPS Sensor Class");
-    sensorData = "GPD, sensor data here";
+    // Put the GPS aquisition code here
+
+    // Save the output data in sensorData
+    sensorData = "GPS data";
 }
+
+void IMUSensorThread::readFromSensor() {
+    // Put IMU data aquisition code here
+    
+    // Save the output data in sensorData
+    sensorData = "IMU data";
+}
+

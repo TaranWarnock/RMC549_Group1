@@ -34,5 +34,14 @@ class GPSSensorThread : public SensorThread {
         GPSSensorThread() : SensorThread("GPS") {}
 };
 
+class IMUSensorThread : public SensorThread {
+    private:
+        // Function for a single IMU reading
+        void readFromSensor() override;
+
+    public:
+        IMUSensorThread() : SensorThread("IMU") {}
+};
+
 #endif
 
