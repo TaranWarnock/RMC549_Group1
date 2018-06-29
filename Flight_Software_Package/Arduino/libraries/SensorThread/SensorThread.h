@@ -4,27 +4,34 @@
 #include <Thread.h>
 
 class SensorThread : public Thread {
-    private:
-        char* sensorName;
-        char* sensorData;
+    protected:
+        String sensorName;
+        String sensorData;
 
-        // the specific sensor behaviour will be implemented by this function
-        virtual void callback() {}
+        // Function for a single sensor reading event here
+        virtual void readFromSensor()  = 0;
 
     public:
-        // constructor should set sensor name and size of data array
+        // constructor should set sensor name
         SensorThread() : Thread() {}
+        SensorThread(String name) : Thread() {
+            sensorName = name;
+        }
         
         void run() override;
+
+        String getSensorData() { 
+            return sensorData;
+        }
 };
 
 class GPSSensorThread : public SensorThread {
     private:
-        // implement GPS reading here
-        void callback() override;
+        // Function for a single GPS reading
+        void readFromSensor() override;
 
     public:
-        GPSSensorThread() : SensorThread() {}
+        GPSSensorThread() : SensorThread("GPS") {}
 };
 
 #endif
