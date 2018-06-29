@@ -47,5 +47,21 @@ class IMUSensorThread : public SensorThread {
         IMUSensorThread() : SensorThread("IMU") {}
 };
 
+class GeigerSensorThread : public SensorThread {
+    private:
+        void readFromSensor() override;
+        static void ISR1();
+        static void ISR2();
+
+    private:
+        static int m_interruptPin[2];
+        static uint16_t m_eventCount[3];
+        static unsigned long m_eventTime[2];
+
+    public:
+	    GeigerSensorThread(int interruptPin1, int interruptPin2);
+
+};  
+
 #endif
 
