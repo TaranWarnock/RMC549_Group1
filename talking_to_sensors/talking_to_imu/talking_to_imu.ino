@@ -8,7 +8,7 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
 void setup(void) 
 {
   Serial.begin(9600);
-  Serial.println("Orientation Sensor Test"); Serial.println("");
+  //Serial.println("Orientation Sensor Test"); Serial.println("");
   
   /* Initialise the sensor */
   if(!bno.begin())
@@ -20,7 +20,7 @@ void setup(void)
   
   delay(1000);
     
-  bno.setExtCrystalUse(true);
+  //bno.setExtCrystalUse(true);
 }
 
 void getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, char* title){
@@ -32,7 +32,7 @@ void getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, char* title){
   Serial.print(data_vector[1]);
   Serial.print("  Z: ");
   Serial.print(data_vector[2]);
-  Serial.println("");
+  //Serial.println("");
 }
 
 void displayCalStatus(void)
@@ -44,7 +44,7 @@ void displayCalStatus(void)
   system = gyro = accel = mag = 0;
   bno.getCalibration(&system, &gyro, &accel, &mag);
   /* The data should be ignored until the system calibration is > 0 */
-  Serial.print("\t");
+  Serial.print(",");
   if (!system)
   {
   Serial.print("! ");
@@ -72,9 +72,9 @@ void loop(void)
   getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Gravity");
   // get temperature and print to consol (accuracy of sensor is 1 degree)
   int temp = bno.getTemp();
-  Serial.print("\tCurrent Temperature: ");
-  Serial.print(temp);
-  Serial.println(" C");
+  Serial.print("Current Temperature: ");
+  Serial.print(String(temp));
+  Serial.print(" C");
   displayCalStatus();
   
   delay(1500);
