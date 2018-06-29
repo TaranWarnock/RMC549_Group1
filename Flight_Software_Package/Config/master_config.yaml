@@ -1,0 +1,10 @@
+general:
+    run_function_diagnostics: False
+
+logger:
+    log_file_path:            C:\\Users\\Daniel_2\\Desktop\\Test_log_files
+    run_logger_diagnostics:   False
+    log_file_verbose:         False
+    
+
+

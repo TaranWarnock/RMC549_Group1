@@ -23,6 +23,12 @@ class Logger(threading.Thread):
         self.data_log_path           = None
 
         self.should_thread_run       = True
+        self.log_file_verbose        = False
+        self.run_logger_diagnostics  = False
+
+        self.current_logger_diagnostics_function_name = None
+        self.function_logger_diagnostics_start_time   = None
+        self.function_logger_diagnostics_end_time     = None
 
         self.class_name  = "Logger"
         self.system_name = socket.gethostname()
@@ -40,10 +46,12 @@ class Logger(threading.Thread):
         :return: None
         """
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '..\\Config\\logger_config.yaml')
+        filename = os.path.join(dirname, '..\\Config\\master_config.yaml')
         with open(filename, 'r') as stream:
-            content = yaml.load(stream)
-        self.log_file_path = content['log_file_path']
+            content = yaml.load(stream)['logger']
+        self.log_file_path          = content['log_file_path']
+        self.log_file_verbose       = content['log_file_verbose']
+        self.run_logger_diagnostics = content['run_logger_diagnostics']
 
     def instantiate_log_files(self)->None:
         """
@@ -79,13 +87,16 @@ class Logger(threading.Thread):
         """
 
         # Do a try except here since there is no need to crash the program if something goes wrong with the file write.
+        self.start_logger_diagnostics("write_notification_to_log")
         try:
             with open(self.notifications_log_path, 'a') as file:
                 file.write(self.notifications_logging_buffer[0])
-            print(self.notifications_logging_buffer[0])
+            if self.log_file_verbose:
+                print(self.notifications_logging_buffer[0])
             del self.notifications_logging_buffer[0]
         except:
             print('FAILED TO WRITE [%s] TO LOG FILE' %(self.notifications_logging_buffer[0]))
+        self.end_logger_diagnostics("write_notification_to_log")
 
     def write_data_to_log(self)->None:
         """
@@ -101,13 +112,32 @@ class Logger(threading.Thread):
         """
 
         # Do a try except here since there is no need to crash the program if something goes wrong with the file write.
+        self.start_logger_diagnostics("write_data_to_log")
         try:
             with open(self.data_log_path, 'a') as file:
                 file.write(self.data_logging_buffer[0])
-            print(self.data_logging_buffer[0])
+            if self.log_file_verbose:
+                print(self.data_logging_buffer[0])
             del self.data_logging_buffer[0]
         except:
             print('FAILED TO WRITE [%s] TO LOG FILE' % (self.data_logging_buffer[0]))
+        self.end_logger_diagnostics("write_data_to_log")
+
+    def start_logger_diagnostics(self, function_name: str):
+        if self.run_logger_diagnostics:
+            self.current_logger_diagnostics_function_name = function_name
+            self.function_logger_diagnostics_start_time   = datetime.datetime.now()
+
+    def end_logger_diagnostics(self, function_name: str):
+        if self.run_logger_diagnostics:
+            if self.current_logger_diagnostics_function_name != function_name:
+                print("DIAGNOSTICS << NAMES DO NOT MATCH << GOT [%s] EXPECTED [%s]"
+                      %(function_name, self.current_logger_diagnostics_function_name))
+            self.function_logger_diagnostics_end_time = datetime.datetime.now()
+            print("DIAGNOSTICS << [%s] << TIME_TAKEN [%f]"
+                  %(function_name,
+                    (self.function_logger_diagnostics_end_time -
+                     self.function_logger_diagnostics_start_time).total_seconds()))
 
     def run(self):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
@@ -116,6 +146,5 @@ class Logger(threading.Thread):
                 self.write_notification_to_log()
             if len(self.data_logging_buffer) > 0:
                 self.write_data_to_log()
-            time.sleep(0.01)
         print("%s << %s << Ending Thread" % (self.system_name, self.class_name))
 

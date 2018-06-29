@@ -19,7 +19,7 @@ if __name__ == "__main__":
     Serial_Communication_Thread.start()
     Command_And_Control_Thread.start()
 
-    time.sleep(1000)
+    time.sleep(10000)
 
     # End Threads
     Command_And_Control_Thread.should_thread_run  = False

@@ -18,10 +18,29 @@ The logger will still have most of the same properties.
 class FlightSoftwareParent(threading.Thread):
     def __init__(self, class_name: str, logging_object: Logger) -> None:
         super().__init__()
-        self.class_name        = class_name
-        self.system_name       = socket.gethostname()
-        self.logger            = logging_object
-        self.should_thread_run = True
+        self.class_name               = class_name
+        self.system_name              = socket.gethostname()
+        self.logger                   = logging_object
+        self.should_thread_run        = True
+
+        self.run_function_diagnostics          = False
+        self.current_diagnostics_function_name = None
+        self.function_diagnostics_start_time   = None
+        self.function_diagnostics_end_time     = None
+
+        self.load_yaml_settings()
+
+    def load_yaml_settings(self)->None:
+        """
+        This function loads in logger configuration settings from the logger_config.yaml file.
+
+        :return: None
+        """
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, '..\\Config\\master_config.yaml')
+        with open(filename, 'r') as stream:
+            content = yaml.load(stream)['general']
+        self.run_function_diagnostics = content['run_function_diagnostics']
 
     def log_error(self, log_message: str) -> None:
         """
@@ -71,3 +90,17 @@ class FlightSoftwareParent(threading.Thread):
         self.logger.data_logging_buffer.append("%s, %s\n" % (
             datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), log_message))
 
+    def start_function_diagnostics(self, function_name: str):
+        if self.run_function_diagnostics:
+            self.current_diagnostics_function_name = function_name
+            self.function_diagnostics_start_time   = datetime.datetime.now()
+
+    def end_function_diagnostics(self, function_name: str):
+        if self.run_function_diagnostics:
+            if self.current_diagnostics_function_name != function_name:
+                print("DIAGNOSTICS << NAMES DO NOT MATCH << GOT [%s] EXPECTED [%s]"
+                      %(function_name, self.current_diagnostics_function_name))
+            self.function_diagnostics_end_time = datetime.datetime.now()
+            print("DIAGNOSTICS << [%s] << TIME_TAKEN [%f]"
+                  %(function_name,
+                    (self.function_diagnostics_end_time - self.function_diagnostics_start_time).total_seconds()))

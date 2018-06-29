@@ -11,21 +11,32 @@ class SerialCommunication(FlightSoftwareParent):
     def __init__(self, logging_object) -> None:
         super().__init__("SerialCommunication", logging_object)
 
+        self.port_list      = dict()
+        self.ports_are_good = False
+
         self.read_request_buffer  = []
         self.write_request_buffer = []
 
-    @staticmethod
-    def find_serial_ports() -> list:
+    def find_serial_ports(self, baudrate: int = 9600, timeout: float = 0) -> None:
         """
-        This function finds active serial ports and returns their names in a list.
+        This function finds active serial ports and makes the serial connections. This function should
+        only be run on startup or if something has changed with the connections.
 
         Code from : https://stackoverflow.com/questions/12090503/listing-available-com-ports-with-python
 
         Adapted by: Daniel Letros, 2018-06-27
 
+        :param baudrate: buadrate of the connection
+        :param timeout: Communication timeout
         :raises EnvironmentError: On unsupported platform
         :return: List of the serial ports available
         """
+        self.start_function_diagnostics("find_serial_ports")
+
+        # Clear old connections if any.
+        for port in self.port_list:
+            self.port_list[port].close()
+        self.port_list.clear()
 
         # Determine ports on current OS
         if sys.platform.startswith('win'):
@@ -46,30 +57,36 @@ class SerialCommunication(FlightSoftwareParent):
                 result.append(port)
             except (OSError, serial.SerialException):
                 pass
-        return result
 
-    def readline_from_serial(self, port: str, baudrate: int = 19200, timeout: float = 1) -> None:
+        # Open ports
+        for port in result:
+            self.port_list[port] = serial.Serial(port=port, baudrate=baudrate,
+                               parity=serial.PARITY_NONE,
+                               stopbits=serial.STOPBITS_ONE,
+                               bytesize=serial.EIGHTBITS,
+                               timeout=timeout,
+                               writeTimeout=timeout)
+
+        self.end_function_diagnostics("find_serial_ports")
+
+    def readline_from_serial(self, port: str) -> None:
         """
         This function will read data on the port up to a EOL char and return it.
 
         Written by Daniel Letros, 2018-06-27
 
         :param port: port to do the communication over
-        :param baudrate: buadrate of the connection
-        :param timeout: Communication timeout
         :return: None
         """
+        self.start_function_diagnostics("readline_from_serial")
         try:
-            with serial.Serial(port=port, baudrate=baudrate,
-                               parity=serial.PARITY_NONE,
-                               stopbits=serial.STOPBITS_ONE,
-                               bytesize=serial.EIGHTBITS,
-                               timeout=timeout) as ser:
-                self.log_data(ser.readline().decode('utf-8').strip())
+            self.log_data(self.port_list[port].readline().decode('utf-8').strip())
         except Exception as err:
             self.log_error(str(err))
+            self.ports_are_good = False
+        self.end_function_diagnostics("readline_from_serial")
 
-    def write_to_serial(self, message: str, port: str, baudrate: int = 19200, timeout: float = 1) -> None:
+    def write_to_serial(self, message: str, port: str) -> None:
         """
         This function will write data to the port during serial communication.
 
@@ -77,20 +94,16 @@ class SerialCommunication(FlightSoftwareParent):
 
         :param message: The message/data to write
         :param port: The port for the serial communication
-        :param baudrate: The buadrate of the connection
-        :param timeout: Connection timeout
         :return: None
         """
+        self.start_function_diagnostics("write_to_serial")
         try:
-            with serial.Serial(port=port, baudrate=baudrate,
-                               parity=serial.PARITY_NONE,
-                               stopbits=serial.STOPBITS_ONE,
-                               bytesize=serial.EIGHTBITS,
-                               writeTimeout=timeout) as ser:
-                ser.write(message.encode('utf-8'))
-                self.log_info("sent [%s] over [%s]" % (message, port))
+            self.port_list[port].write(message.encode('utf-8'))
+            self.log_info("sent [%s] over [%s]" % (message, port))
         except Exception as err:
             self.log_error(str(err))
+            self.ports_are_good = False
+        self.end_function_diagnostics("write_to_serial")
 
     def run(self):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
