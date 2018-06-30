@@ -21,6 +21,7 @@ class Logger(threading.Thread):
         self.log_file_path           = None
         self.notifications_log_path  = None
         self.data_log_path           = None
+        self.main_delay              = None
 
         self.should_thread_run       = True
         self.log_file_verbose        = False
@@ -41,7 +42,9 @@ class Logger(threading.Thread):
 
     def load_yaml_settings(self)->None:
         """
-        This function loads in logger configuration settings from the logger_config.yaml file.
+        This function loads in settings from the master_config.yaml file.
+
+        Written by Daniel Letros, 2018-06-30
 
         :return: None
         """
@@ -52,6 +55,7 @@ class Logger(threading.Thread):
         self.log_file_path          = content['log_file_path']
         self.log_file_verbose       = content['log_file_verbose']
         self.run_logger_diagnostics = content['run_logger_diagnostics']
+        self.main_delay             = content['main_delay']
 
     def instantiate_log_files(self)->None:
         """
@@ -92,7 +96,7 @@ class Logger(threading.Thread):
             with open(self.notifications_log_path, 'a') as file:
                 file.write(self.notifications_logging_buffer[0])
             if self.log_file_verbose:
-                print(self.notifications_logging_buffer[0])
+                print("NOTIFICATION << " + self.notifications_logging_buffer[0])
             del self.notifications_logging_buffer[0]
         except:
             print('FAILED TO WRITE [%s] TO LOG FILE' %(self.notifications_logging_buffer[0]))
@@ -117,7 +121,7 @@ class Logger(threading.Thread):
             with open(self.data_log_path, 'a') as file:
                 file.write(self.data_logging_buffer[0])
             if self.log_file_verbose:
-                print(self.data_logging_buffer[0])
+                print("DATA << " + self.data_logging_buffer[0])
             del self.data_logging_buffer[0]
         except:
             print('FAILED TO WRITE [%s] TO LOG FILE' % (self.data_logging_buffer[0]))
@@ -144,7 +148,8 @@ class Logger(threading.Thread):
         while self.should_thread_run:
             if len(self.notifications_logging_buffer) > 0:
                 self.write_notification_to_log()
-            if len(self.data_logging_buffer) > 0:
+            elif len(self.data_logging_buffer) > 0:
                 self.write_data_to_log()
+            time.sleep(self.main_delay)
         print("%s << %s << Ending Thread" % (self.system_name, self.class_name))
 

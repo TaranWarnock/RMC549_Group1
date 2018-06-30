@@ -28,11 +28,16 @@ class FlightSoftwareParent(threading.Thread):
         self.function_diagnostics_start_time   = None
         self.function_diagnostics_end_time     = None
 
-        self.load_yaml_settings()
+        try:
+            self.load_yaml_settings()
+        except:
+            self.log_warning("Failed to load yaml settings. Default values used.")
 
     def load_yaml_settings(self)->None:
         """
-        This function loads in logger configuration settings from the logger_config.yaml file.
+        This function loads in settings from the master_config.yaml file.
+
+        Written by Daniel Letros, 2018-06-30
 
         :return: None
         """
