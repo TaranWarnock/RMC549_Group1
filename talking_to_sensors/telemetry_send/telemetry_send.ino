@@ -91,7 +91,7 @@ void loop(void) {
   Serial.println("Sending..."); delay(10);
   rf95.send((uint8_t *)radiopacket, len_data);
  
-  Serial.println("Waiting for packet to complete..."); delay(10);
+  Serial.println("Waiting for packet to complete...");
   rf95.waitPacketSent();
   // Now wait for a reply
   uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -117,6 +117,6 @@ void loop(void) {
   {
     Serial.println("No reply, is there a listener around?");
   }
-  delay(1500);
+  delay(1000);
 
 }
