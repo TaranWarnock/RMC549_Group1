@@ -23,7 +23,17 @@ void GPSSensorThread::readFromSensor() {
         bool myInterrupt = false;
         int lineCount = 0;
 	sensorData = "";
+//        String line1 = "";
+//        String line2 = "";
+//        String temp = "";
 
+
+        while(Serial1.available())
+          Serial1.read();
+        while(Serial1.available())
+          Serial1.read();
+        while(Serial1.available())
+          Serial1.read();
 
         while(true)
         {
@@ -46,7 +56,23 @@ void GPSSensorThread::readFromSensor() {
 
         }
 
+//        while(Serial1.available()){
+//            char c = Serial1.read();
 
+//            if (c == '$'){
+//                startOfNewNMEA = true;
+//                line2 = line1;
+//                line1 = temp;
+//                temp = "";
+//            }
+
+//            if (startOfNewNMEA)
+//                temp.concat(c);
+
+//        }
+
+//            sensorData.concat(line1);
+//            sensorData.concat(line2);
             sensorData.trim();
             sensorData.replace("\n",",");
             sensorData.replace("\r",",");
