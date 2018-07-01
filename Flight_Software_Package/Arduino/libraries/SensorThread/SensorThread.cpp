@@ -10,7 +10,7 @@ void EmuSensorThread::readFromSensor() {
     // Just generate random numbers for emulation
 	long random_data_one = random(0, 1000.01);
 	long random_data_two = random(0, 1000.01);
-	
+
     // Save the output data in sensorData
     sensorData = String(random_data_one);
 	sensorData.concat(",");
@@ -18,35 +18,53 @@ void EmuSensorThread::readFromSensor() {
 }
 
 
-void GPSSensorThread::readFromSensor() { 
+void GPSSensorThread::readFromSensor() {
+        bool startOfNewNMEA = false;
+        bool myInterrupt = false;
+        int lineCount = 0;
 	sensorData = "";
-	if (Serial1.available() > 0) 
-	{
-		while(Serial1.available() > 0)
-		{
-		  sensorData.concat((char)Serial1.read());  
-		}
 
-    sensorData.trim();
-	sensorData.replace("\n","");
-	sensorData.replace("\r","");
-	
-	// This code works correctly but right at this point the string in sensorData looks like:
-	// $GPGGA,,4413.41602,N,07629.96370,W,7,00,,,,,,,*4A$GPVTG,,,,,,,,,M*33$GPGGA,,4413.41602,N,07629.96370,W,7,00,,,,,,,*4A$GPVTG,,,,,,,,,M*33$GPGGA,,4413.41602,
-	// A line like this needs to be refined down. Look up the meanings of the different NMEA lines, put code below which extracts only the data we want, 
-	// and reformat the data into something like:
-	// lat,lon,alt, ... etc
-	// finally, update the header information in 
-	//public:
-    //    GPSSensorThread() : SensorThread("GPS", <header here>) {}
-	// to reflect the new format.
-	
-	}
+
+        while(true)
+        {
+            if (Serial1.available() > 0){
+                char c = Serial1.read();
+
+                if (c == '$'){
+                    startOfNewNMEA = true;
+                    lineCount++;
+                }
+
+                if (lineCount > 2){
+                    myInterrupt = true;
+                    break;
+                }
+
+                if (startOfNewNMEA)
+                    sensorData.concat(c);
+            }
+
+        }
+
+
+            sensorData.trim();
+            sensorData.replace("\n",",");
+            sensorData.replace("\r",",");
+
+        // UPD (LO): This code will provide two NMEA lines which contain the __one and only required__ information.
+        // It might be left as it is now and processed later not to take operational time from the main loop.
+        // Parsing the comma separated string shouldn't be a problem
+
+        // UPD (LO): We want to make GPS module constantly running and spit out data on request. I have to talk to Lukas and Tom about it because of
+        // the analogy to geiger counter.
+
+
+
 }
 
 void IMUSensorThread::readFromSensor() {
     // Put IMU data acquisition code here
-    
+
     // Save the output data in sensorData
     sensorData = "IMU data";
 }
