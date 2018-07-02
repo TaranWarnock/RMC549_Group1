@@ -2,7 +2,8 @@
 #define SENSORTHREAD_H
 
 #include <Thread.h>
-
+#include <Adafruit_BNO055.h>
+#include <utility/imumaths.h>   // used in IMU code
 
 class SensorThread : public Thread {
     protected:
@@ -56,11 +57,18 @@ class GPSSensorThread : public SensorThread {
 
 class IMUSensorThread : public SensorThread {
     private:
+        Adafruit_BNO055* bnoPtr;    // pointer to sensor handler
+
         // Function for a single IMU reading
         void readFromSensor() override;
+		
+		String getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title);
+		String displayCalStatus(void);
 
     public:
-        IMUSensorThread() : SensorThread("IMU", "IMUdata") {}
+        IMUSensorThread(Adafruit_BNO055* bno) : SensorThread("IMU", "IMUdata") {
+            bnoPtr = bno;
+        }
 };
 
 #endif
