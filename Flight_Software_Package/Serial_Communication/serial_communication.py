@@ -8,25 +8,20 @@ class SerialCommunication(FlightSoftwareParent):
     Written by Daniel Letros, 2018-06-27
     """
 
-    def __init__(self, logging_object) -> None:
+    def __init__(self, logging_object: Logger) -> None:
+        self.default_buadrate = 9600
+        self.default_timeout = 0
+        self.main_delay = 0.5
         super().__init__("SerialCommunication", logging_object)
 
         self.port_list        = dict()
         self.ports_are_good   = False
-        self.default_buadrate = 9600
-        self.default_timeout  = 0
-        self.main_delay       = 0.5
 
         self.expect_read_after_write = False  # Used to facilitate a call and respond system by default.
                                               # Can be circumvented by changing state elsewhere in code.
 
         self.read_request_buffer  = []  # buffer of ports to read from, [port, message_type], ...]
         self.write_request_buffer = []  # buffer of ports to write to, [[port, message], ...]
-
-        try:
-            self.load_yaml_settings()
-        except:
-            self.log_warning("Failed to load yaml settings. Default values used.")
 
     def load_yaml_settings(self)->None:
         """

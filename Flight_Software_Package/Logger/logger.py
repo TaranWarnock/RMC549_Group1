@@ -40,6 +40,8 @@ class Logger(threading.Thread):
 
         if platform == "linux" or platform == "linux2":
             self.yaml_config_path = '../Config/master_config.yaml'
+        elif platform == "darwin":
+            self.yaml_config_path = '../Config/master_config.yaml'
         elif platform == "win32":
             self.yaml_config_path = '..\\Config\\master_config.yaml'
         else:
@@ -63,6 +65,8 @@ class Logger(threading.Thread):
 
         if platform == "linux" or platform == "linux2":
             self.log_file_path = content['log_file_path_Linux']
+        elif platform == "darwin":
+            self.log_file_path = content['log_file_path_mac']
         elif platform == "win32":
             self.log_file_path = content['log_file_path_Windows']
         else:
