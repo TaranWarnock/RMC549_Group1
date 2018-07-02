@@ -28,7 +28,7 @@ class CommandAndControl(FlightSoftwareParent):
         :return: None
         """
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '..\\Config\\master_config.yaml')
+        filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['command_and_control']
         self.buffering_delay = content['buffering_delay']

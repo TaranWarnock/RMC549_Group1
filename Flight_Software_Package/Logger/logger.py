@@ -4,6 +4,7 @@ import os
 import datetime
 import time
 import socket
+from sys import platform
 
 class Logger(threading.Thread):
     """
@@ -37,6 +38,13 @@ class Logger(threading.Thread):
         self.notifications_logging_buffer = []
         self.data_logging_buffer          = []
 
+        if platform == "linux" or platform == "linux2":
+            self.yaml_config_path = '../Config/master_config.yaml'
+        elif platform == "win32":
+            self.yaml_config_path = '..\\Config\\master_config.yaml'
+        else:
+            self.yaml_config_path = None
+
         self.load_yaml_settings()
         self.instantiate_log_files()
 
@@ -49,10 +57,18 @@ class Logger(threading.Thread):
         :return: None
         """
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '..\\Config\\master_config.yaml')
+        filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['logger']
-        self.log_file_path          = content['log_file_path']
+
+        if platform == "linux" or platform == "linux2":
+            self.log_file_path = content['log_file_path_Linux']
+        elif platform == "win32":
+            self.log_file_path = content['log_file_path_Windows']
+        else:
+            self.yaml_config_path = None
+
+
         self.log_file_verbose       = content['log_file_verbose']
         self.run_logger_diagnostics = content['run_logger_diagnostics']
         self.main_delay             = content['main_delay']

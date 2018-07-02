@@ -8,6 +8,7 @@ import numpy as np
 import threading
 import time
 import datetime
+from sys import platform
 from Logger.logger import *
 
 """
@@ -28,6 +29,13 @@ class FlightSoftwareParent(threading.Thread):
         self.function_diagnostics_start_time   = None
         self.function_diagnostics_end_time     = None
 
+        if platform == "linux" or platform == "linux2":
+            self.yaml_config_path = '../Config/master_config.yaml'
+        elif platform == "win32":
+            self.yaml_config_path = '..\\Config\\master_config.yaml'
+        else:
+            self.yaml_config_path = None
+
         try:
             self.load_yaml_settings()
         except:
@@ -42,7 +50,7 @@ class FlightSoftwareParent(threading.Thread):
         :return: None
         """
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '..\\Config\\master_config.yaml')
+        filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['general']
         self.run_function_diagnostics = content['run_function_diagnostics']

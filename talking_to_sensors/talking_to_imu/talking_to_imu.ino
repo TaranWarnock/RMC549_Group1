@@ -23,16 +23,9 @@ void setup(void)
   //bno.setExtCrystalUse(true);
 }
 
-void getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, char* title){
+void getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title){
   imu::Vector<3> data_vector = bno.getVector(sensor_type);
-  Serial.print(title);
-  Serial.print(": X: ");
-  Serial.print(data_vector[0]);
-  Serial.print("  Y: ");
-  Serial.print(data_vector[1]);
-  Serial.print("  Z: ");
-  Serial.print(data_vector[2]);
-  //Serial.println("");
+  Serial.print(title + ": X: " + String(data_vector[0]) + " Y: " + String(data_vector[1]) + " Z: " + String(data_vector[2]));
 }
 
 void displayCalStatus(void)
@@ -64,15 +57,15 @@ void displayCalStatus(void)
 
 void loop(void) 
 {
-  getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "Acceleration");
-  getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gyroscope");
-  getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "Magnetometer");
-  getvec(Adafruit_BNO055::VECTOR_EULER, "Euler");
-  getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "LinearAccel");
-  getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Gravity");
+  getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "A");
+  getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gy");
+  getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "M");
+  getvec(Adafruit_BNO055::VECTOR_EULER, "E");
+  getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "L");
+  getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Gr");
   // get temperature and print to consol (accuracy of sensor is 1 degree)
   int temp = bno.getTemp();
-  Serial.print("Current Temperature: ");
+  Serial.print("T: ");
   Serial.print(String(temp));
   Serial.print(" C");
   displayCalStatus();

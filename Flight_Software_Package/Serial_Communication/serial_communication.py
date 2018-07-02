@@ -37,7 +37,7 @@ class SerialCommunication(FlightSoftwareParent):
         :return: None
         """
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '..\\Config\\master_config.yaml')
+        filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['serial_communication']
         self.default_buadrate = content['default_baud_rate']
@@ -92,6 +92,10 @@ class SerialCommunication(FlightSoftwareParent):
                 pass
 
         # Open ports
+        try:
+            result.remove('/dev/ttyAMA0')  # AMA0 seems to be always "active" as is the Pi's PL011, ignore.
+        except:
+            pass
         for port in result:
             self.port_list[port] = serial.Serial(port=port, baudrate=baudrate,
                                parity=serial.PARITY_NONE,
