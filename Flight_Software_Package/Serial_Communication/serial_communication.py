@@ -17,6 +17,9 @@ class SerialCommunication(FlightSoftwareParent):
         self.default_timeout  = 0
         self.main_delay       = 0.5
 
+        self.expect_read_after_write = False  # Used to facilitate a call and respond system by default.
+                                              # Can be circumvented by changing state elsewhere in code.
+
         self.read_request_buffer  = []  # buffer of ports to read from, [port, message_type], ...]
         self.write_request_buffer = []  # buffer of ports to write to, [[port, message], ...]
 
@@ -146,12 +149,14 @@ class SerialCommunication(FlightSoftwareParent):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
         while self.should_thread_run:
             try:
-                if len(self.read_request_buffer) > 0:
+                if len(self.read_request_buffer) > 0 and self.expect_read_after_write:
                     self.readline_from_serial(self.read_request_buffer[0][0], self.read_request_buffer[0][1])
                     del self.read_request_buffer[0]
-                elif len(self.write_request_buffer) > 0:
+                    self.expect_read_after_write = False
+                elif len(self.write_request_buffer) > 0 and not self.expect_read_after_write:
                     self.write_to_serial(self.write_request_buffer[0][0], self.write_request_buffer[0][1])
                     del self.write_request_buffer[0]
+                    self.expect_read_after_write = True
             except:
                 pass
             time.sleep(self.main_delay)
