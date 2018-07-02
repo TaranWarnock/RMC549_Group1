@@ -31,6 +31,8 @@ class FlightSoftwareParent(threading.Thread):
 
         if platform == "linux" or platform == "linux2":
             self.yaml_config_path = '../Config/master_config.yaml'
+        elif platform == "darwin":
+            self.yaml_config_path = '../Config/master_config.yaml'
         elif platform == "win32":
             self.yaml_config_path = '..\\Config\\master_config.yaml'
         else:
@@ -39,7 +41,7 @@ class FlightSoftwareParent(threading.Thread):
         try:
             self.load_yaml_settings()
         except:
-            self.log_warning("Failed to load yaml settings. Default values used.")
+            self.log_warning("[%s] Failed to load yaml settings. Default values used." % self.class_name)
 
     def load_yaml_settings(self)->None:
         """
