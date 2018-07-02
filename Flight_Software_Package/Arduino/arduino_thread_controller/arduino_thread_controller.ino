@@ -11,8 +11,14 @@ ThreadController controller = ThreadController();
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
-  Serial1.begin(4800); // Setting up GPS serial com
+  // ------------------------ Changing the baud rate of GPS Serial1 port ---------------------------
+  Serial1.begin(4800);
+  Serial1.write("$PTNLSPT,115200,8,N,1,4,4*11\r\n");
+  delay(1000);
+  Serial1.end();
+  // -----------------------------------------------------------------------------------------------
+  
+  Serial1.begin(115200); // Setting up GPS serial com
     while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
