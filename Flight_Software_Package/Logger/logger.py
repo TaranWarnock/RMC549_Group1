@@ -49,7 +49,7 @@ class Logger(threading.Thread):
         :return: None
         """
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '..\\Config\\master_config.yaml')
+        filename = os.path.join(dirname, '../Config/master_config.yaml')
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['logger']
         self.log_file_path          = content['log_file_path']
