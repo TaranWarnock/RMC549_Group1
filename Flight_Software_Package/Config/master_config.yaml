@@ -7,7 +7,7 @@ logger:
     log_file_path_Windows:    C:\Users\Daniel_2\Desktop\Test_log_files     # Where to save logging files on Windows (lab)
     run_logger_diagnostics:   False                                        # Runs diagnostics on logging functions
     log_file_verbose:         True                                         # Will print to console the logging activity
-    
+
 serial_communication:
     main_delay:               0.05                                         # Delay [sec] for the run() function of thread
     default_baud_rate:        115200                                       # Buadrate of serial communication
@@ -16,4 +16,3 @@ serial_communication:
 command_and_control:
     buffering_delay:          0                                            # Delay [sec] for different commanding operations
     que_data_delay:           3                                            # Delay [sec] for queuing new round of data
-
