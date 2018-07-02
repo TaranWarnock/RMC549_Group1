@@ -3,6 +3,7 @@
 
 #include <Thread.h>
 
+
 class SensorThread : public Thread {
     protected:
         String sensorName;
@@ -50,7 +51,7 @@ class GPSSensorThread : public SensorThread {
         void readFromSensor() override;
 
     public:
-        GPSSensorThread() : SensorThread("GPS", "GPSdata") {}
+        GPSSensorThread() : SensorThread("GPS", "NMEA1,NMEA2") {}
 };
 
 class IMUSensorThread : public SensorThread {
