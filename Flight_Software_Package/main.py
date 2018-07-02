@@ -1,7 +1,7 @@
-from Flight_Software_Package.Common.FSW_Common import *
-from Flight_Software_Package.Command_and_Control.command_and_control import *
-from Flight_Software_Package.Logger.logger import *
-from Flight_Software_Package.Serial_Communication.serial_communication import *
+from Common.FSW_Common import *
+from Command_and_Control.command_and_control import *
+from Logger.logger import *
+from Serial_Communication.serial_communication import *
 
 if __name__ == "__main__":
     """

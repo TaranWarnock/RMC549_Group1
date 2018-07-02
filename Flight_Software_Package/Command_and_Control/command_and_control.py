@@ -1,5 +1,5 @@
-from Flight_Software_Package.Common.FSW_Common import *
-from Flight_Software_Package.Serial_Communication.serial_communication import SerialCommunication
+from Common.FSW_Common import *
+from Serial_Communication.serial_communication import SerialCommunication
 
 class CommandAndControl(FlightSoftwareParent):
     """
@@ -67,7 +67,7 @@ class CommandAndControl(FlightSoftwareParent):
                             self.serial_object.read_request_buffer.append( [port, "HEADER"])
                             time.sleep(self.buffering_delay)
 
-                elif self.serial_object.ports_are_good:
+                if self.serial_object.ports_are_good:
                     # Everything is established, collect data.
                     for port in self.serial_object.port_list:
                         time.sleep(self.buffering_delay)

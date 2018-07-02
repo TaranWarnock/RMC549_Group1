@@ -8,7 +8,7 @@ import numpy as np
 import threading
 import time
 import datetime
-from Flight_Software_Package.Logger.logger import *
+from Logger.logger import *
 
 """
 This package acts as a super parent which all other things (except the logger) inherent from.

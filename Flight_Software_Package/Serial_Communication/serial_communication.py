@@ -1,4 +1,4 @@
-from Flight_Software_Package.Common.FSW_Common import *
+from Common.FSW_Common import *
 
 
 class SerialCommunication(FlightSoftwareParent):
@@ -16,6 +16,9 @@ class SerialCommunication(FlightSoftwareParent):
         self.default_buadrate = 9600
         self.default_timeout  = 0
         self.main_delay       = 0.5
+
+        self.expect_read_after_write = False  # Used to facilitate a call and respond system by default.
+                                              # Can be circumvented by changing state elsewhere in code.
 
         self.read_request_buffer  = []  # buffer of ports to read from, [port, message_type], ...]
         self.write_request_buffer = []  # buffer of ports to write to, [[port, message], ...]
@@ -111,13 +114,19 @@ class SerialCommunication(FlightSoftwareParent):
         """
         self.start_function_diagnostics("readline_from_serial")
         try:
-            if type is "DATA":
-                self.log_data(self.port_list[port].readline().decode('utf-8').strip())
+            new_data = self.port_list[port].readline().decode('utf-8').strip()
+            if new_data is "":
+                self.log_error("[%s] returned no data." % port)
+                self.port_list[port].reset_input_buffer()
+            elif type is "DATA":
+                self.log_data(new_data)
+                self.log_info("received [%s] information over [%s]" % (type, port))
             elif type is "ID":
-                self.log_info("IDs << " + self.port_list[port].readline().decode('utf-8').strip())
+                self.log_id(new_data)
+                self.log_info("received [%s] information over [%s]" % (type, port))
             elif type is "HEADER":
-                self.log_info("HEADER << " + self.port_list[port].readline().decode('utf-8').strip())
-            self.log_info("received information over [%s]" % (port))
+                self.log_header(new_data)
+                self.log_info("received [%s] information over [%s]" % (type, port))
         except Exception as err:
             self.log_error(str(err))
             self.ports_are_good = False
@@ -139,19 +148,47 @@ class SerialCommunication(FlightSoftwareParent):
             self.log_info("sent [%s] over [%s]" % (message, port))
         except Exception as err:
             self.log_error(str(err))
+            self.port_list[port].reset_output_buffer()
             self.ports_are_good = False
         self.end_function_diagnostics("write_to_serial")
+
+    def log_id(self, log_message: str) -> None:
+        """
+        This function will que the input message to be logged as a device id line to the notifications log file.
+
+        Written by Daniel Letros, 2018-06-27
+
+        :param log_message: Info message to log
+        :return: None
+        """
+        self.logger.notifications_logging_buffer.append("ID << %s << %s << %s << %s\n" % (
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+
+    def log_header(self, log_message: str) -> None:
+        """
+        This function will que the input message to be logged as a data header to the notifications log file.
+
+        Written by Daniel Letros, 2018-06-27
+
+        :param log_message: Info message to log
+        :return: None
+        """
+        self.logger.notifications_logging_buffer.append("HEADER << %s << %s << %s << %s\n" % (
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+
 
     def run(self):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
         while self.should_thread_run:
             try:
-                if len(self.read_request_buffer) > 0:
+                if len(self.read_request_buffer) > 0 and self.expect_read_after_write:
                     self.readline_from_serial(self.read_request_buffer[0][0], self.read_request_buffer[0][1])
                     del self.read_request_buffer[0]
-                elif len(self.write_request_buffer) > 0:
+                    self.expect_read_after_write = False
+                elif len(self.write_request_buffer) > 0 and not self.expect_read_after_write:
                     self.write_to_serial(self.write_request_buffer[0][0], self.write_request_buffer[0][1])
                     del self.write_request_buffer[0]
+                    self.expect_read_after_write = True
             except:
                 pass
             time.sleep(self.main_delay)
