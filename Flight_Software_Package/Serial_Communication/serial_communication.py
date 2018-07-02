@@ -93,12 +93,14 @@ class SerialCommunication(FlightSoftwareParent):
 
         # Open ports
         for port in result:
-            self.port_list[port] = serial.Serial(port=port, baudrate=baudrate,
-                               parity=serial.PARITY_NONE,
-                               stopbits=serial.STOPBITS_ONE,
-                               bytesize=serial.EIGHTBITS,
-                               timeout=timeout,
-                               writeTimeout=timeout)
+            if port is not '/dev/ttyACM0':
+                # ACM0 seems to be always "active" as is the Pi's PL011, ignore.
+                self.port_list[port] = serial.Serial(port=port, baudrate=baudrate,
+                                   parity=serial.PARITY_NONE,
+                                   stopbits=serial.STOPBITS_ONE,
+                                   bytesize=serial.EIGHTBITS,
+                                   timeout=timeout,
+                                   writeTimeout=timeout)
 
         self.end_function_diagnostics("find_serial_ports")
 
