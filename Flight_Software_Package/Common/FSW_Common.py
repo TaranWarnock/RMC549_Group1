@@ -30,11 +30,11 @@ class FlightSoftwareParent(threading.Thread):
         self.function_diagnostics_end_time     = None
 
         if platform == "linux" or platform == "linux2":
-            self.config_yaml_path = '../Config/master_config.yaml'
+            self.yaml_config_path = '../Config/master_config.yaml'
         elif platform == "win32":
-            self.config_yaml_path = '..\\Config\\master_config.yaml'
+            self.yaml_config_path = '..\\Config\\master_config.yaml'
         else:
-            self.config_yaml_path = None
+            self.yaml_config_path = None
 
         try:
             self.load_yaml_settings()
@@ -50,7 +50,7 @@ class FlightSoftwareParent(threading.Thread):
         :return: None
         """
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '..\\Config\\master_config.yaml')
+        filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['general']
         self.run_function_diagnostics = content['run_function_diagnostics']

@@ -37,7 +37,7 @@ class SerialCommunication(FlightSoftwareParent):
         :return: None
         """
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '..\\Config\\master_config.yaml')
+        filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['serial_communication']
         self.default_buadrate = content['default_baud_rate']
