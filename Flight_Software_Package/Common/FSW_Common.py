@@ -8,6 +8,7 @@ import numpy as np
 import threading
 import time
 import datetime
+from sys import platform
 from Logger.logger import *
 
 """
@@ -27,6 +28,13 @@ class FlightSoftwareParent(threading.Thread):
         self.current_diagnostics_function_name = None
         self.function_diagnostics_start_time   = None
         self.function_diagnostics_end_time     = None
+
+        if platform == "linux" or platform == "linux2":
+            self.config_yaml_path = '../Config/master_config.yaml'
+        elif platform == "win32":
+            self.config_yaml_path = '..\\Config\\master_config.yaml'
+        else:
+            self.config_yaml_path = None
 
         try:
             self.load_yaml_settings()
