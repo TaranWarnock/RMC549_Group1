@@ -22,10 +22,8 @@ void GPSSensorThread::readFromSensor() {
         bool startOfNewNMEA = false;
         bool myInterrupt = false;
         int lineCount = 0;
-	sensorData = "";
-//        String line1 = "";
-//        String line2 = "";
-//        String temp = "";
+        sensorData = "";
+        String NMEA = "";
 
 
         while(Serial1.available())
@@ -34,56 +32,58 @@ void GPSSensorThread::readFromSensor() {
           Serial1.read();
         while(Serial1.available())
           Serial1.read();
+        while(Serial1.available())
+          Serial1.read();
+
 
         while(true)
         {
             if (Serial1.available() > 0){
                 char c = Serial1.read();
-
                 if (c == '$'){
                     startOfNewNMEA = true;
                     lineCount++;
                 }
-
                 if (lineCount > 2){
                     myInterrupt = true;
                     break;
                 }
-
                 if (startOfNewNMEA)
-                    sensorData.concat(c);
+                    NMEA.concat(c);
             }
-
         }
 
-//        while(Serial1.available()){
-//            char c = Serial1.read();
+        NMEA.trim();
+        NMEA.replace("\n",",");
+        NMEA.replace("\r",",");
 
-//            if (c == '$'){
-//                startOfNewNMEA = true;
-//                line2 = line1;
-//                line1 = temp;
-//                temp = "";
-//            }
+        if (!NMEA[NMEA.length()-4] == '*') {
+            sensorData = "NaN";
+            return;
+        }
 
-//            if (startOfNewNMEA)
-//                temp.concat(c);
 
-//        }
+//        Sorting, so GPGGA will be before GPVTG
+        if (NMEA.startsWith("$GPVTG")){
+            int indx = NMEA.indexOf("$GPGGA");
+            NMEA = NMEA.substring(indx) + "," + NMEA.substring(0, indx);
+        }
 
-//            sensorData.concat(line1);
-//            sensorData.concat(line2);
-            sensorData.trim();
-            sensorData.replace("\n",",");
-            sensorData.replace("\r",",");
+//        sensorData.concat(NMEA);
+//        sensorData.concat("|");
 
-        // UPD (LO): This code will provide two NMEA lines which contain the __one and only required__ information.
-        // It might be left as it is now and processed later not to take operational time from the main loop.
-        // Parsing the comma separated string shouldn't be a problem
+        int valueCounter = 0;
+        int oldIndx = 0;
+        int newIndx = NMEA.indexOf(",");
 
-        // UPD (LO): We want to make GPS module constantly running and spit out data on request. I have to talk to Lukas and Tom about it because of
-        // the analogy to geiger counter.
-
+        while(newIndx > 0){
+            valueCounter++;
+            if (valueCounter == 2 || valueCounter == 3 || valueCounter == 5 || valueCounter == 10 || valueCounter == 24){
+                sensorData.concat(NMEA.substring(oldIndx + 1, newIndx + 1));
+            }
+            oldIndx = newIndx;
+            newIndx = NMEA.indexOf(",", oldIndx + 1);
+        }
 
 
 }

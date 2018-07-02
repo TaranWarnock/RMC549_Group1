@@ -51,7 +51,7 @@ class GPSSensorThread : public SensorThread {
         void readFromSensor() override;
 
     public:
-        GPSSensorThread() : SensorThread("GPS", "NMEA1,NMEA2") {}
+        GPSSensorThread() : SensorThread("GPS", "UTC,Latitude(DegMin),Longitude(DegMin),Altitude(m),GroundSpeed(km/sec)") {}
 };
 
 class IMUSensorThread : public SensorThread {
