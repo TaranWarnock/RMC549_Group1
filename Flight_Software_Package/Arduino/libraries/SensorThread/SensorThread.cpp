@@ -143,5 +143,7 @@ String IMUSensorThread::displayCalStatus(void) {
     calString.concat(String(accel));
     calString.concat(" M:");
     calString.concat(String(mag));
+
+    return calString;
 }
 
