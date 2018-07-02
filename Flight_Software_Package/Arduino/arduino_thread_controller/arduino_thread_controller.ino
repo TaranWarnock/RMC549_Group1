@@ -1,10 +1,13 @@
 #include <SensorThread.h>
 #include <ThreadController.h>
 
+// create handler for IMU
+Adafruit_BNO055 bno = Adafruit_BNO055(55);
+
 // create thread for each sensor
 SensorThread* emu_thread = new EmuSensorThread();
 SensorThread* gps_thread = new GPSSensorThread();
-SensorThread* imu_thread = new IMUSensorThread();
+SensorThread* imu_thread = new IMUSensorThread(&bno);
 
 // create controller to hold the threads
 ThreadController controller = ThreadController();
@@ -15,6 +18,14 @@ void setup() {
   Serial1.begin(4800); // Setting up GPS serial com
     while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
+  }
+
+  // Initialize the IMU
+  if(!bno.begin())
+  {
+    /* There was a problem detecting the BNO055 ... check your connections */
+    //Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    //while(1);
   }
 
   // add each thread to the controller
