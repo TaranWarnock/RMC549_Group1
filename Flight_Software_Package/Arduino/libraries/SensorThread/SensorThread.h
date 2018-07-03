@@ -71,5 +71,21 @@ class IMUSensorThread : public SensorThread {
         }
 };
 
+class GeigerSensorThread : public SensorThread {
+    private:
+        void readFromSensor() override;
+        static void ISR1();
+        static void ISR2();
+
+    public:
+        static volatile int m_interruptPin[2];
+        static volatile uint16_t m_eventCount[3];
+        static volatile unsigned long m_eventTime[2];
+
+    public:
+	    GeigerSensorThread(int interruptPin1, int interruptPin2);
+
+};  
+
 #endif
 
