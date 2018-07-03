@@ -159,15 +159,18 @@ void loop() {
     else if ((pi_command.substring(0, 2)).equalsIgnoreCase("TX"))
     {
       // Pi has asked to transmit data to ground
-      String dataStr = pi_command.substring(2);  // remove TX from string, might not want to do this
 
-      int len_data = dataStr.length() + 1;
-      char radiopacket[len_data];
-      dataStr.toCharArray(radiopacket, len_data);
+      if (doTelemetry) {
+      
+        String dataStr = pi_command.substring(2);  // remove TX from string, might not want to do this
 
-      rf95.send((uint8_t *)radiopacket, len_data);
-      rf95.waitPacketSent();
+        int len_data = dataStr.length() + 1;
+        char radiopacket[len_data];
+        dataStr.toCharArray(radiopacket, len_data);
 
+        rf95.send((uint8_t *)radiopacket, len_data);
+        rf95.waitPacketSent();
+      }
       // send OK to the Pi
       Serial.println("OK");
     }
