@@ -36,11 +36,18 @@ GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2) : S
 }
 
 void GeigerSensorThread::readFromSensor() {
+    // save counts to sensor data
+    // send stuff to Pi (don't know how ATM)
+    sensorData = "";
+    sensorData.concat(String(m_eventCount[0]));
+    sensorData.concat(",");
+    sensorData.concat(String(m_eventCount[1]));
+    sensorData.concat(",");
+    sensorData.concat(String(m_eventCount[2]));
+
     m_eventCount[0] = 0;
     m_eventCount[1] = 0;
     m_eventCount[2] = 0;
-
-    // send stuff to Pi (don't know how ATM)
 }
 
 void GeigerSensorThread::ISR1() {
