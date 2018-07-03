@@ -23,14 +23,15 @@ class Telemetry(FlightSoftwareParent):
         filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['telemetry']
+        self.main_delay = content['main_delay']
 
 
     def run(self) -> None:
         """
-        This function is the main loop of the flight control software for the RMC 549 balloon(s).
+        This function is the main loop of the telemetry for the RMC 549 balloon(s).
         Software states and software/hardware communication is handled here.
 
-        Written by Daniel Letros, 2018-06-30
+        Written by Daniel Letros, 2018-07-02
 
         :return: None
         """

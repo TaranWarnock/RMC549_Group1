@@ -14,6 +14,10 @@ serial_communication:
     default_baud_rate:        115200                                       # Buadrate of serial communication
     default_timeout:          3                                            # Timeout [sec] of serial communication
 
+system_control:
+    main_delay:               3                                            # Delay [sec] for the run() function of thread
+    cutoff_BCM_pin_number:    18                                           # The pin number in BCM layout of the cutoff relay
+
 telemetry:
     main_delay:               0.05                                         # Delay [sec] for the run() function of thread
 

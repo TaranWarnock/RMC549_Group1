@@ -9,7 +9,10 @@ import threading
 import time
 import datetime
 from sys import platform
+if socket.gethostname() == "Rocky" or socket.gethostname() == "MajorTom":
+    import RPi.GPIO as GPIO
 from Logger.logger import *
+
 
 """
 This package acts as a super parent which all other things (except the logger) inherent from.

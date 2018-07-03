@@ -2,6 +2,7 @@ from Common.FSW_Common import *
 from Command_and_Control.command_and_control import *
 from Logger.logger import *
 from Serial_Communication.serial_communication import *
+from System_Control.system_control import *
 from Telemetry.telemetry import *
 
 if __name__ == "__main__":
@@ -13,12 +14,17 @@ if __name__ == "__main__":
     # Create threads
     Logging_Thread              = Logger()
     Serial_Communication_Thread = SerialCommunication(Logging_Thread)
+    System_Control_Thread       = SystemControl(Logging_Thread)
     Telemetry_Thread            = Telemetry(Logging_Thread)
-    Command_And_Control_Thread  = CommandAndControl(Logging_Thread, Serial_Communication_Thread, Telemetry_Thread)
+    Command_And_Control_Thread  = CommandAndControl(Logging_Thread,
+                                                    Serial_Communication_Thread,
+                                                    Telemetry_Thread,
+                                                    System_Control_Thread)
 
     # Start threads
     Logging_Thread.start()
     Serial_Communication_Thread.start()
+    System_Control_Thread.start()
     Telemetry_Thread.start()
     Command_And_Control_Thread.start()
 
@@ -31,6 +37,8 @@ if __name__ == "__main__":
     Command_And_Control_Thread.join()
     Telemetry_Thread.should_thread_run            = False
     Telemetry_Thread.join()
+    System_Control_Thread.should_thread_run       = False
+    System_Control_Thread.join()
     Serial_Communication_Thread.should_thread_run = False
     Serial_Communication_Thread.join()
     Logging_Thread.should_thread_run              = False
