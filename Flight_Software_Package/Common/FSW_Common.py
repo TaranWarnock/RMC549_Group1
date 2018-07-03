@@ -8,7 +8,8 @@ import numpy as np
 import threading
 import time
 import datetime
-from Flight_Software_Package.Logger.logger import *
+from sys import platform
+from Logger.logger import *
 
 """
 This package acts as a super parent which all other things (except the logger) inherent from.
@@ -28,16 +29,30 @@ class FlightSoftwareParent(threading.Thread):
         self.function_diagnostics_start_time   = None
         self.function_diagnostics_end_time     = None
 
-        self.load_yaml_settings()
+        if platform == "linux" or platform == "linux2":
+            self.yaml_config_path = '../Config/master_config.yaml'
+        elif platform == "darwin":
+            self.yaml_config_path = '../Config/master_config.yaml'
+        elif platform == "win32":
+            self.yaml_config_path = '..\\Config\\master_config.yaml'
+        else:
+            self.yaml_config_path = None
+
+        try:
+            self.load_yaml_settings()
+        except:
+            self.log_warning("[%s] Failed to load yaml settings. Default values used." % self.class_name)
 
     def load_yaml_settings(self)->None:
         """
-        This function loads in logger configuration settings from the logger_config.yaml file.
+        This function loads in settings from the master_config.yaml file.
+
+        Written by Daniel Letros, 2018-06-30
 
         :return: None
         """
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '..\\Config\\master_config.yaml')
+        filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['general']
         self.run_function_diagnostics = content['run_function_diagnostics']

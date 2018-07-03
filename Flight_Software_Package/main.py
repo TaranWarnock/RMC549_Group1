@@ -1,7 +1,8 @@
-from Flight_Software_Package.Common.FSW_Common import *
-from Flight_Software_Package.Command_and_Control.command_and_control import *
-from Flight_Software_Package.Logger.logger import *
-from Flight_Software_Package.Serial_Communication.serial_communication import *
+from Common.FSW_Common import *
+from Command_and_Control.command_and_control import *
+from Logger.logger import *
+from Serial_Communication.serial_communication import *
+from Telemetry.telemetry import *
 
 if __name__ == "__main__":
     """
@@ -12,22 +13,94 @@ if __name__ == "__main__":
     # Create threads
     Logging_Thread              = Logger()
     Serial_Communication_Thread = SerialCommunication(Logging_Thread)
-    Command_And_Control_Thread  = CommandAndControl(Logging_Thread, Serial_Communication_Thread)
+    Telemetry_Thread            = Telemetry(Logging_Thread)
+    Command_And_Control_Thread  = CommandAndControl(Logging_Thread, Serial_Communication_Thread, Telemetry_Thread)
 
     # Start threads
     Logging_Thread.start()
     Serial_Communication_Thread.start()
+    Telemetry_Thread.start()
     Command_And_Control_Thread.start()
 
-    time.sleep(10000)
+    while True:
+        # Live forever for now
+        time.sleep(10000)
 
     # End Threads
     Command_And_Control_Thread.should_thread_run  = False
     Command_And_Control_Thread.join()
+    Telemetry_Thread.should_thread_run            = False
+    Telemetry_Thread.join()
     Serial_Communication_Thread.should_thread_run = False
     Serial_Communication_Thread.join()
     Logging_Thread.should_thread_run              = False
     Logging_Thread.join()
-    print("Exiting Main Thread")
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    print("""            ,:/+/-
+            /M/              .,-=;//;-
+       .:/= ;MH/,    ,=/+%$XH@MM#@:
+      -$##@+$###@H@MMM#######H:.    -/H#
+ .,H@H@ X######@ -H#####@+-     -+H###@X
+  .,@##H;      +XM##M/,     =%@###@X;-
+X%-  :M##########$.    .:%M###@%:
+M##H,   +H@@@$/-.  ,;$M###@%,          -
+M####M=,,---,.-%%H####M$:          ,+@##
+@##################@/.         :%H##@$-
+M###############H,         ;HM##M$=
+#################.    .=$M##M$=
+################H..;XM##M$=          .:+
+M###################@%=           =+@MH%
+@################M/.          =+H#X%=
+=+M##############M,       -/X#X+;.
+  .;XM##########H=    ,/X#H+:,
+     .=+HM######M+/+HM@+=.
+         ,:/%XM####H/.
+              ,.:=-.                    """)
+    print("This was a triumph!")
+    print("I'm making a note here:")
+    print("Huge success!")

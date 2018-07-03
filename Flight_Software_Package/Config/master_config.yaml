@@ -1,10 +1,23 @@
 general:
-    run_function_diagnostics: False
+    run_function_diagnostics: False                                        # Runs diagnostics on all functions except logging functions
 
 logger:
-    log_file_path:            C:\\Users\\Daniel_2\\Desktop\\Test_log_files
-    run_logger_diagnostics:   False
-    log_file_verbose:         False
+    main_delay:               0.05                                         # Delay [sec] for the run() function of thread
+    log_file_path_Linux:      /home/pi/RMC549Repos/RMC549_Group1/logs      # Where to save logging files on Linux system
+    log_file_path_Windows:    C:\Users\Daniel_2\Desktop\Test_log_files     # Where to save logging files on Windows (lab)
+    log_file_path_mac:        /Users/taran/Test_log_files                  # Where to save logging files on Mac (lab)
+    run_logger_diagnostics:   False                                        # Runs diagnostics on logging functions
+    log_file_verbose:         True                                         # Will print to console the logging activity
     
+serial_communication:
+    main_delay:               0.05                                         # Delay [sec] for the run() function of thread
+    default_baud_rate:        115200                                       # Buadrate of serial communication
+    default_timeout:          3                                            # Timeout [sec] of serial communication
 
+telemetry:
+    main_delay:               0.05                                         # Delay [sec] for the run() function of thread
+
+command_and_control:
+    buffering_delay:          0                                            # Delay [sec] for different commanding operations
+    que_data_delay:           3                                            # Delay [sec] for queuing new round of data
 
