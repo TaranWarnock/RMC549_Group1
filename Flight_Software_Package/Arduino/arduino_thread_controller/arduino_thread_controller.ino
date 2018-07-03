@@ -16,13 +16,15 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
 MPL3115A2 preassure;
 
 // create thread for each sensor
-SensorThread* emu_thread = new EmuSensorThread();
 SensorThread* gps_thread = new GPSSensorThread();
 SensorThread* imu_thread = new IMUSensorThread(&bno, &preassure);
 SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
 
 // create controller to hold the threads
 ThreadController controller = ThreadController();
+
+bool doIMU;
+bool doTelemetry;
 
 void setup() {
   // put your setup code here, to run once:
@@ -70,7 +72,6 @@ void setup() {
   delay(1000);
 
   // add each thread to the controller
-  controller.add(emu_thread);
   controller.add(gps_thread);
   controller.add(imu_thread);
   controller.add(geiger_thread);
