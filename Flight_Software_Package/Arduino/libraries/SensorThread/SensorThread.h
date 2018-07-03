@@ -37,14 +37,6 @@ class SensorThread : public Thread {
         }
 };
 
-class EmuSensorThread : public SensorThread {
-    private:
-        // Function for emulation of a generic sensor
-        void readFromSensor() override;
-
-    public:
-        EmuSensorThread() : SensorThread("EMU", "RndNumOne,RndNumTwo") {}
-};
 
 class GPSSensorThread : public SensorThread {
     private:

@@ -15,7 +15,6 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 // create thread for each sensor
-SensorThread* emu_thread = new EmuSensorThread();
 SensorThread* gps_thread = new GPSSensorThread();
 SensorThread* imu_thread = new IMUSensorThread(&bno);
 SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
@@ -73,7 +72,6 @@ void setup() {
 
 
   // add each thread to the controller
-  controller.add(emu_thread);
   controller.add(gps_thread);
   controller.add(imu_thread);
   controller.add(geiger_thread);

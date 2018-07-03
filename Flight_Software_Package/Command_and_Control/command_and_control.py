@@ -14,8 +14,9 @@ class CommandAndControl(FlightSoftwareParent):
                  serial_object: SerialCommunication,
                  telemetry_object: Telemetry,
                  system_control_object: SystemControl) -> None:
-        self.buffering_delay = 0.1
-        self.que_data_delay = 5
+        self.buffering_delay              = 0.1
+        self.que_data_delay               = 5
+        self.telemetry_num_data_intervals = 3
         super().__init__("CommandAndControl", logging_object)
         self.serial_object         = serial_object
         self.system_control_object = system_control_object
@@ -34,9 +35,9 @@ class CommandAndControl(FlightSoftwareParent):
         filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['command_and_control']
-        self.buffering_delay = content['buffering_delay']
-        self.que_data_delay  = content['que_data_delay']
-
+        self.buffering_delay              = content['buffering_delay']
+        self.que_data_delay               = content['que_data_delay']
+        self.telemetry_num_data_intervals = content['telemetry_num_data_intervals']
     def run(self) -> None:
         """
         This function is the main loop of the flight control software for the RMC 549 balloon(s).
@@ -48,6 +49,7 @@ class CommandAndControl(FlightSoftwareParent):
         """
 
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
+        number_of_data_ques = 0
         while self.should_thread_run:
             try:
                 # Register all devices/sensors which this software can reach.
@@ -78,6 +80,17 @@ class CommandAndControl(FlightSoftwareParent):
                         time.sleep(self.buffering_delay)
                         self.serial_object.read_request_buffer.append([port, "DATA"])
                         time.sleep(self.buffering_delay)
+
+                        number_of_data_ques += 1
+
+                        if number_of_data_ques >= self.telemetry_num_data_intervals:
+                            number_of_data_ques = 0
+                            log_line = self.read_last_line_in_data_log()
+                            time.sleep(self.buffering_delay)
+                            self.serial_object.write_request_buffer.append([port, "TX%s" % log_line])
+                            time.sleep(self.buffering_delay)
+                            self.serial_object.read_request_buffer.append([port, "TX"])
+                            time.sleep(self.buffering_delay)
                 else:
                     self.log_warning("Don't see any devices.")
             except:

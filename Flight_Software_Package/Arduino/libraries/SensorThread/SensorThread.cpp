@@ -6,17 +6,6 @@ void SensorThread::run() {
     runned();
 }
 
-void EmuSensorThread::readFromSensor() {
-    // Just generate random numbers for emulation
-	long random_data_one = random(0, 1000.01);
-	long random_data_two = random(0, 1000.01);
-
-    // Save the output data in sensorData
-    sensorData = String(random_data_one);
-	sensorData.concat(",");
-	sensorData.concat(random_data_two);
-}
-
 
 void GPSSensorThread::readFromSensor() {
         bool startOfNewNMEA = false;

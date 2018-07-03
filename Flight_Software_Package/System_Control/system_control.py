@@ -8,8 +8,13 @@ class SystemControl(FlightSoftwareParent):
     """
 
     def __init__(self, logging_object: Logger) -> None:
-        self.main_delay     = 0.05
-        self.cutoff_pin_bcm = 18
+        self.main_delay        = 0.05
+        self.cutoff_pin_bcm    = 18
+        self.cutoff_conditions = dict()
+        self.cutoff_conditions['gps_altitude'] = 30
+        self.cutoff_conditions['gps_lat']      = [22, 23]
+        self.cutoff_conditions['gps_lon']      = [24, 25]
+        self.cutoff_conditions['time']         = "12:34"
         super().__init__("SystemControl", logging_object)
 
         try:
@@ -32,9 +37,9 @@ class SystemControl(FlightSoftwareParent):
         filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['system_control']
-        self.main_delay     = content['main_delay']
-        self.cutoff_pin_bcm = content['cutoff_BCM_pin_number']
-
+        self.main_delay        = content['main_delay']
+        self.cutoff_pin_bcm    = content['cutoff_BCM_pin_number']
+        self.cutoff_conditions = content['cut_conditions']
 
     def run(self) -> None:
         """
@@ -49,8 +54,9 @@ class SystemControl(FlightSoftwareParent):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
         while self.should_thread_run:
             try:
-                # TODO: Check log file/time/alt for some cutoff conditions
-                # For now just toggle pin for testing
+                time.sleep(20)
+                log_line = self.read_last_line_in_data_log()
+                print("SYSTEM CONTROL DEBUG: LOG LINE [%s]" % log_line)
                 GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
             except:
                 pass
