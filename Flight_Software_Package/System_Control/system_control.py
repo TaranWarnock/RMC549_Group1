@@ -55,8 +55,8 @@ class SystemControl(FlightSoftwareParent):
         while self.should_thread_run:
             try:
                 time.sleep(20)
-                log_line = self.read_last_line_in_data_log()
-                print("SYSTEM CONTROL DEBUG: LOG LINE [%s]" % log_line)
+                # log_line = self.read_last_line_in_data_log()
+                # print("SYSTEM CONTROL DEBUG: LOG LINE [%s]" % log_line)
                 GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
             except:
                 pass
