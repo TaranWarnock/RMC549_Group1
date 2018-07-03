@@ -77,7 +77,7 @@ class GeigerSensorThread : public SensorThread {
         static void ISR1();
         static void ISR2();
 
-    private:
+    public:
         static volatile int m_interruptPin[2];
         static volatile uint16_t m_eventCount[3];
         static volatile unsigned long m_eventTime[2];
