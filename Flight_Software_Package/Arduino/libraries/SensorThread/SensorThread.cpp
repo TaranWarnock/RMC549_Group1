@@ -98,6 +98,10 @@ void IMUSensorThread::readFromSensor() {
     sensorData.concat(String(temp));
     sensorData.concat(",");
     sensorData.concat(displayCalStatus());
+    sensorData.concat(",");
+    sensorData.concat(preassurePtr->readPressure());
+    sensorData.concat(",");
+    sensorData.concat(preassurePtr->readTemp());
 }
 
 String IMUSensorThread::getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type,

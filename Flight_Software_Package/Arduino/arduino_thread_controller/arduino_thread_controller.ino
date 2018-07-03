@@ -3,10 +3,11 @@
 
 // create handler for IMU
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
+MPL3115A2 preassure;
 
 // create thread for each sensor
 SensorThread* gps_thread = new GPSSensorThread();
-SensorThread* imu_thread = new IMUSensorThread(&bno);
+SensorThread* imu_thread = new IMUSensorThread(&bno, &preassure);
 SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
 
 // create controller to hold the threads
@@ -33,6 +34,10 @@ void setup() {
     //Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
     //while(1);
   }
+
+  preassure.setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
+  preassure.setOversampleRate(7); // Set Oversample to the recommended 128
+  preassure.enableEventFlags(); // Enable all three pressure and temp event flags 
 
   // add each thread to the controller
   controller.add(gps_thread);

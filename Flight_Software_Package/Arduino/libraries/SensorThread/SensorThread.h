@@ -4,11 +4,12 @@
 #include <Thread.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>   // used in IMU code
+#include "SparkFunMPL3115A2.h"
 
 class SensorThread : public Thread {
     protected:
         String sensorName;
-		String sensorHeader;
+                String sensorHeader;
         String sensorData;
 
         // Function for a single sensor reading event here
@@ -19,16 +20,16 @@ class SensorThread : public Thread {
         SensorThread() : Thread() {}
         SensorThread(String name, String header) : Thread() {
             sensorName   = name;
-			sensorHeader = header;
+                        sensorHeader = header;
         }
-        
+
         void run() override;
-		
-		String getSensorHeader() {
+
+                String getSensorHeader() {
             return sensorHeader;
         }
-		
-        String getSensorData() { 
+
+        String getSensorData() {
             return sensorData;
         }
 
@@ -50,16 +51,17 @@ class GPSSensorThread : public SensorThread {
 class IMUSensorThread : public SensorThread {
     private:
         Adafruit_BNO055* bnoPtr;    // pointer to sensor handler
+        MPL3115A2* preassurePtr;    // pointer to preassure
 
         // Function for a single IMU reading
         void readFromSensor() override;
-		
-		String getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title);
-		String displayCalStatus(void);
+
+                String getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title);
+                String displayCalStatus(void);
 
     public:
-        IMUSensorThread(Adafruit_BNO055* bno) : SensorThread(
-                "IMU", 
+        IMUSensorThread(Adafruit_BNO055* bno, MPL3115A2* preassure) : SensorThread(
+                "IMU,PressureSensor",
                 "Accelerometer_x(m/s^2),Accelerometer_y(m/s^2),Accelerometer_z(m/s^2),"
                 "Gyroscope_x(rad/s),Gyroscope_y(rad/s),Gyroscope_z(rad/s),"
                 "Magnetometer_x(uT),Magnetometer_y(uT),Magnetometer_z(uT),"
@@ -67,8 +69,9 @@ class IMUSensorThread : public SensorThread {
                 "LinearAcceleration_x(m/s^2),LinearAcceleration_y(m/s^2),LinearAcceleration_z(m/s^2),"
                 "Gravity_x(m/s^2),Gravity_y(m/s^2),Gravity_z(m/s^2),"
                 "Temperature(C),SystemCalibration(0-3),GyroCalibration(0-3),"
-                "AccelerometerCalibration(0-3),MagnetometerCalibration(0-3)") {
+                "AccelerometerCalibration(0-3),MagnetometerCalibration(0-3),Pressure(Pa),TemperaturePressureSensor(C)") {
             bnoPtr = bno;
+            preassurePtr = preassure;
         }
 };
 
@@ -84,9 +87,9 @@ class GeigerSensorThread : public SensorThread {
         static volatile unsigned long m_eventTime[2];
 
     public:
-	    GeigerSensorThread(int interruptPin1, int interruptPin2);
+            GeigerSensorThread(int interruptPin1, int interruptPin2);
 
-};  
+};
 
 #endif
 
