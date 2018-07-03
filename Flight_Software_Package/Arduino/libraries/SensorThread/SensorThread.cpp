@@ -92,17 +92,22 @@ void IMUSensorThread::readFromSensor() {
     // Put IMU data acquisition code here and save result in sensorData
     sensorData = "";
     sensorData.concat(getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "A"));
+    sensorData.concat(",");
     sensorData.concat(getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gy"));
+    sensorData.concat(",");
     sensorData.concat(getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "M"));
+    sensorData.concat(",");
     sensorData.concat(getvec(Adafruit_BNO055::VECTOR_EULER, "E"));
+    sensorData.concat(",");
     sensorData.concat(getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "L"));
+    sensorData.concat(",");
     sensorData.concat(getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Gr"));
+    sensorData.concat(",");
 
     // get temperature and append to sensorData (accuracy of sensor is 1 degree)
     int temp = bnoPtr->getTemp();
-    sensorData.concat("T: ");
     sensorData.concat(String(temp));
-    sensorData.concat(" C");
+    sensorData.concat(",");
     sensorData.concat(displayCalStatus());
 }
 
@@ -110,13 +115,7 @@ String IMUSensorThread::getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_ty
                                String title) {
     imu::Vector<3> data_vector = bnoPtr->getVector(sensor_type);
     String vecString = "";
-    vecString.concat(title);
-    vecString.concat(": X: ");
-    vecString.concat(String(data_vector[0]));
-    vecString.concat(" Y: ");
-    vecString.concat(String(data_vector[1]));
-    vecString.concat(" Z: ");
-    vecString.concat(String(data_vector[2]));
+    vecString = String(data_vector[0]) + "," + String(data_vector[1]) + "," + String(data_vector[2]);
 
     return vecString;
 }
@@ -130,19 +129,12 @@ String IMUSensorThread::displayCalStatus(void) {
     String calString = "";
     bnoPtr->getCalibration(&system, &gyro, &accel, &mag);
     /* The data should be ignored until the system calibration is > 0 */
-    calString.concat(",");
-    if (!system) {
-      calString.concat("! ");
-    }
+    //calString.concat(",");
+    //if (!system) {
+    //  calString.concat("! ");
+    //}
     /* Display the individual values */
-    calString.concat("Calibration: Sys:");
-    calString.concat(String(system));
-    calString.concat(" G:");
-    calString.concat(String(gyro));
-    calString.concat(" A:");
-    calString.concat(String(accel));
-    calString.concat(" M:");
-    calString.concat(String(mag));
+    calString = String(system) + "," + String(gyro) + "," + String(accel) + "," + String(mag);
 
     return calString;
 }

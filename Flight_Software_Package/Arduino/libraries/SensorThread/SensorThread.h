@@ -66,7 +66,16 @@ class IMUSensorThread : public SensorThread {
 		String displayCalStatus(void);
 
     public:
-        IMUSensorThread(Adafruit_BNO055* bno) : SensorThread("IMU", "IMUdata") {
+        IMUSensorThread(Adafruit_BNO055* bno) : SensorThread(
+                "IMU", 
+                "Accelerometer_x(m/s^2),Accelerometer_y(m/s^2),Accelerometer_z(m/s^2),"
+                "Gyroscope_x(rad/s),Gyroscope_y(rad/s),Gyroscope_z(rad/s),"
+                "Magnetometer_x(uT),Magnetometer_y(uT),Magnetometer_z(uT),"
+                "Euler_x(deg),Euler_y(deg),Euler_z(deg),"
+                "LinearAcceleration_x(m/s^2),LinearAcceleration_y(m/s^2),LinearAcceleration_z(m/s^2),"
+                "Gravity_x(m/s^2),Gravity_y(m/s^2),Gravity_z(m/s^2),"
+                "Temperature(C),SystemCalibration(0-3),GyroCalibration(0-3),"
+                "AccelerometerCalibration(0-3),MagnetometerCalibration(0-3)") {
             bnoPtr = bno;
         }
 };
