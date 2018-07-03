@@ -39,6 +39,8 @@ if __name__ == "__main__":
     Telemetry_Thread.join()
     System_Control_Thread.should_thread_run       = False
     System_Control_Thread.join()
+    if socket.gethostname() == "Rocky" or socket.gethostname() == "MajorTom":
+        GPIO.cleanup()
     Serial_Communication_Thread.should_thread_run = False
     Serial_Communication_Thread.join()
     Logging_Thread.should_thread_run              = False

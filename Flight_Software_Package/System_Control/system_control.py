@@ -14,6 +14,7 @@ class SystemControl(FlightSoftwareParent):
 
         try:
             # Configure the cutoff pin
+            GPIO.setwarnings(False)
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(self.cutoff_pin_bcm, GPIO.OUT, initial=GPIO.LOW)
         except:
