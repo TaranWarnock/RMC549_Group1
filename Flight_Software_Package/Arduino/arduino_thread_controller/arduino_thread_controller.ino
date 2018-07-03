@@ -15,6 +15,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 // create thread for each sensor
+SensorThread* emu_thread = new EmuSensorThread();
 SensorThread* gps_thread = new GPSSensorThread();
 SensorThread* imu_thread = new IMUSensorThread(&bno);
 SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
@@ -32,16 +33,15 @@ void setup() {
   // -----------------------------------------------------------------------------------------------
   
   Serial1.begin(115200); // Setting up GPS serial com
-    while (!Serial) {
+  while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
   // Initialize the IMU
-  if(!bno.begin())
+  doIMU = bno.begin();
+  if(!doIMU)
   {
-    /* There was a problem detecting the BNO055 ... check your connections */
-    //Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    //while(1);
+    // could send an error message to the Pi here
   }
 
   // Initialize telemetry
@@ -53,25 +53,18 @@ void setup() {
   delay(10);
   digitalWrite(RFM95_RST, HIGH);
   delay(10);
-  while (!rf95.init()) {
-    //Serial.println("LoRa radio init failed");
-    //while (1);
-  }
+  doTelemetry = rf95.init();
   // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
-  if (!rf95.setFrequency(RF95_FREQ)) {
-    //Serial.println("setFrequency failed");
-    //while (1);
-  }
+  doTelemetry = doTelemetry && rf95.setFrequency(RF95_FREQ);
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
- 
   // The default transmitter power is 13dBm, using PA_BOOST.
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
   // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
   delay(1000);
 
-
   // add each thread to the controller
+  controller.add(emu_thread);
   controller.add(gps_thread);
   controller.add(imu_thread);
   controller.add(geiger_thread);
@@ -154,17 +147,12 @@ void loop() {
 
       // Send data to Pi
       Serial.println(full_data);
-    
-      // Uncomment if data must be a character array:
-      //size_t bufsize = 256;
-      //char data_buffer[bufsize];
-      //full_data.toCharArray(data_buffer, bufsize);
-      //Serial.println(data_buffer);  // DEBUG statement
     }
+    
     else if ((pi_command.substring(0, 2)).equalsIgnoreCase("TX"))
     {
       // Pi has asked to transmit data to ground
-      String dataStr = pi_command.substring(2);  // remove TX from string, maybe don't want to do this
+      String dataStr = pi_command.substring(2);  // remove TX from string, might not want to do this
 
       int len_data = dataStr.length() + 1;
       char radiopacket[len_data];
@@ -176,6 +164,7 @@ void loop() {
       // send OK to the Pi
       Serial.println("OK");
     }
+    
     else
     {
       // Do nothing. Pi will know of error on timeout.
