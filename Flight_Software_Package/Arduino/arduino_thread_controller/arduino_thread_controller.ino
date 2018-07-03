@@ -1,5 +1,15 @@
 #include <SensorThread.h>
 #include <ThreadController.h>
+#include <RH_RF95.h>
+
+// Telemetry definitions
+#define RFM95_CS 5
+#define RFM95_RST 6
+#define RFM95_INT 9
+// Change to 434.0 or other frequency, must match RX's freq!
+#define RF95_FREQ 434.0
+// Singleton instance of the radio driver
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // create handler for IMU
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
@@ -35,9 +45,38 @@ void setup() {
     //while(1);
   }
 
+
   preassure.setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
   preassure.setOversampleRate(7); // Set Oversample to the recommended 128
   preassure.enableEventFlags(); // Enable all three pressure and temp event flags 
+
+  // Initialize telemetry
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(100);
+  // manual reset
+  digitalWrite(RFM95_RST, LOW);
+  delay(10);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(10);
+  while (!rf95.init()) {
+    //Serial.println("LoRa radio init failed");
+    //while (1);
+  }
+  // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
+  if (!rf95.setFrequency(RF95_FREQ)) {
+    //Serial.println("setFrequency failed");
+    //while (1);
+  }
+  // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
+ 
+  // The default transmitter power is 13dBm, using PA_BOOST.
+  // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
+  // you can set transmitter powers from 5 to 23 dBm:
+  rf95.setTxPower(23, false);
+  delay(1000);
+
+
 
   // add each thread to the controller
   controller.add(gps_thread);
@@ -128,6 +167,21 @@ void loop() {
       //char data_buffer[bufsize];
       //full_data.toCharArray(data_buffer, bufsize);
       //Serial.println(data_buffer);  // DEBUG statement
+    }
+    else if ((pi_command.substring(0, 2)).equalsIgnoreCase("TX"))
+    {
+      // Pi has asked to transmit data to ground
+      String dataStr = pi_command.substring(2);  // remove TX from string, maybe don't want to do this
+
+      int len_data = dataStr.length() + 1;
+      char radiopacket[len_data];
+      dataStr.toCharArray(radiopacket, len_data);
+
+      rf95.send((uint8_t *)radiopacket, len_data);
+      rf95.waitPacketSent();
+
+      // send OK to the Pi
+      Serial.println("OK");
     }
     else
     {
