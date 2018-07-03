@@ -108,6 +108,26 @@ class FlightSoftwareParent(threading.Thread):
         self.logger.data_logging_buffer.append("%s, %s\n" % (
             datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), log_message))
 
+    def read_last_line_in_data_log(self) -> str:
+        """
+        This function will read the last line in the data log file and return it
+
+        Written by Daniel Letros, 2018-07-03
+
+        :return: None
+        """
+        file_name = self.logger.data_log_path
+        try:
+            with open(file_name, 'rb') as f:
+                f.seek(-2, os.SEEK_END)
+                while f.read(1) != b'\n':
+                    f.seek(-2, os.SEEK_CUR)
+                content = f.readline().decode()
+        except:
+            with open(file_name, 'rb') as f:
+                content = f.readlines()[-1].decode()
+        return content
+
     def start_function_diagnostics(self, function_name: str):
         if self.run_function_diagnostics:
             self.current_diagnostics_function_name = function_name
