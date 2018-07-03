@@ -13,11 +13,12 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // create handler for IMU
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
+MPL3115A2 preassure;
 
 // create thread for each sensor
 SensorThread* emu_thread = new EmuSensorThread();
 SensorThread* gps_thread = new GPSSensorThread();
-SensorThread* imu_thread = new IMUSensorThread(&bno);
+SensorThread* imu_thread = new IMUSensorThread(&bno, &preassure);
 SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
 
 // create controller to hold the threads
@@ -43,6 +44,11 @@ void setup() {
   {
     // could send an error message to the Pi here
   }
+
+
+  preassure.setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
+  preassure.setOversampleRate(7); // Set Oversample to the recommended 128
+  preassure.enableEventFlags(); // Enable all three pressure and temp event flags 
 
   // Initialize telemetry
   pinMode(RFM95_RST, OUTPUT);
