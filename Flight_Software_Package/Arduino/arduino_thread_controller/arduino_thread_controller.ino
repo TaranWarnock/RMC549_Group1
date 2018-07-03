@@ -39,6 +39,7 @@ void setup() {
   controller.add(emu_thread);
   controller.add(gps_thread);
   controller.add(imu_thread);
+  controller.add(geiger_thread);
 }
 
 void loop() {
