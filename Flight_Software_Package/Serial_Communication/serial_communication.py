@@ -16,6 +16,10 @@ class SerialCommunication(FlightSoftwareParent):
 
         self.port_list        = dict()
         self.ports_are_good   = False
+        self.serial_mutex     = threading.Lock()
+
+        self.last_uplink_command_valid = False
+        self.last_uplink_command     = ""
 
         self.expect_read_after_write = False  # Used to facilitate a call and respond system by default.
                                               # Can be circumvented by changing state elsewhere in code.
@@ -114,21 +118,24 @@ class SerialCommunication(FlightSoftwareParent):
         self.start_function_diagnostics("readline_from_serial")
         try:
             new_data = self.port_list[port].readline().decode('utf-8').strip()
-            if new_data is "":
+            if new_data is "" and type is not "RX":
                 self.log_error("[%s] returned no data." % port)
                 self.port_list[port].reset_input_buffer()
+                return
             elif type is "DATA":
                 self.log_data(new_data)
-                self.log_info("received [%s] information over [%s]" % (type, port))
             elif type is "ID":
                 self.log_id(new_data)
-                self.log_info("received [%s] information over [%s]" % (type, port))
             elif type is "HEADER":
                 self.log_header(new_data)
-                self.log_info("received [%s] information over [%s]" % (type, port))
             elif type is "TX":
                 self.log_tx_event(new_data)
-                self.log_info("received [%s] information over [%s]" % (type, port))
+            elif type is "RX":
+                self.log_rx_event(new_data)
+                self.last_uplink_command       = new_data
+                self.last_uplink_command_valid = True
+            self.log_info("received [%s] information over [%s]" % (type, port))
+
 
         except Exception as err:
             self.log_error(str(err))
@@ -161,11 +168,11 @@ class SerialCommunication(FlightSoftwareParent):
 
         Written by Daniel Letros, 2018-06-27
 
-        :param log_message: Info message to log
+        :param log_message: ID message to log
         :return: None
         """
         self.logger.notifications_logging_buffer.append("ID << %s << %s << %s << %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
     def log_header(self, log_message: str) -> None:
         """
@@ -173,24 +180,35 @@ class SerialCommunication(FlightSoftwareParent):
 
         Written by Daniel Letros, 2018-06-27
 
-        :param log_message: Info message to log
+        :param log_message: Header message to log
         :return: None
         """
         self.logger.notifications_logging_buffer.append("HEADER << %s << %s << %s << %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
     def log_tx_event(self, log_message: str) -> None:
         """
         This function will que the input message to be logged as a TX sent event to the notifications log file.
 
-        Written by Daniel Letros, 2018-06-27
+        Written by Daniel Letros, 2018-07-03
 
-        :param log_message: Info message to log
+        :param log_message: TX message to log
         :return: None
         """
         self.logger.notifications_logging_buffer.append("TX << %s << %s << %s << %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
+    def log_rx_event(self, log_message: str) -> None:
+        """
+        This function will que the input message to be logged as a RX received event to the notifications log file.
+
+        Written by Daniel Letros, 2018-07-04
+
+        :param log_message: RX message to log
+        :return: None
+        """
+        self.logger.notifications_logging_buffer.append("RX << %s << %s << %s << %s\n" % (
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
     def run(self):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))

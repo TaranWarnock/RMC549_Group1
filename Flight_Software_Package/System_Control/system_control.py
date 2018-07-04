@@ -1,4 +1,5 @@
 from Common.FSW_Common import *
+from Serial_Communication.serial_communication import SerialCommunication
 
 class SystemControl(FlightSoftwareParent):
     """
@@ -7,7 +8,7 @@ class SystemControl(FlightSoftwareParent):
     Written by Daniel Letros, 2018-07-03
     """
 
-    def __init__(self, logging_object: Logger) -> None:
+    def __init__(self, logging_object: Logger, serial_object: SerialCommunication) -> None:
         self.main_delay        = 0.05
         self.cutoff_pin_bcm    = 18
         self.cutoff_conditions = dict()
@@ -16,6 +17,7 @@ class SystemControl(FlightSoftwareParent):
         self.cutoff_conditions['gps_lon']      = [24, 25]
         self.cutoff_conditions['time']         = "12:34"
         super().__init__("SystemControl", logging_object)
+        self.serial_object = serial_object
 
         try:
             # Configure the cutoff pin
@@ -57,7 +59,10 @@ class SystemControl(FlightSoftwareParent):
                 # time.sleep(20)
                 # log_line = self.read_last_line_in_data_log()
                 # print("SYSTEM CONTROL DEBUG: LOG LINE [%s]" % log_line)
-                GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
+                if self.serial_object.last_uplink_command_valid:
+                    if self.serial_object.last_uplink_command.lower() is "cut the mofo":
+                        GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
+                        self.serial_object.last_uplink_command_valid = False
             except:
                 pass
             time.sleep(self.main_delay)

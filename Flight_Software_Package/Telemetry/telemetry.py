@@ -1,4 +1,5 @@
 from Common.FSW_Common import *
+from Serial_Communication.serial_communication import SerialCommunication
 
 class Telemetry(FlightSoftwareParent):
     """
@@ -7,9 +8,12 @@ class Telemetry(FlightSoftwareParent):
     Written by Daniel Letros, 2018-07-02
     """
 
-    def __init__(self, logging_object: Logger) -> None:
-        self.main_delay = 0.05
+    def __init__(self, logging_object: Logger, serial_object: SerialCommunication) -> None:
+        self.main_delay           = 0.5
+        self.send_telemetry_delay = 9
+        self.buffering_delay      = 0.05
         super().__init__("Telemetry", logging_object)
+        self.serial_object = serial_object
 
     def load_yaml_settings(self)->None:
         """
@@ -23,13 +27,13 @@ class Telemetry(FlightSoftwareParent):
         filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['telemetry']
-        self.main_delay = content['main_delay']
-
+        self.send_telemetry_delay = content['send_telemetry_delay']
+        self.buffering_delay      = content['buffering_delay']
+        self.main_delay           = content['main_delay']
 
     def run(self) -> None:
         """
         This function is the main loop of the telemetry for the RMC 549 balloon(s).
-        Software states and software/hardware communication is handled here.
 
         Written by Daniel Letros, 2018-07-02
 
@@ -37,10 +41,31 @@ class Telemetry(FlightSoftwareParent):
         """
 
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
+        tx_timer_start = datetime.datetime.now()
+        tx_timer_end   = datetime.datetime.now()
         while self.should_thread_run:
             try:
-                pass
+                if self.serial_object.ports_are_good:
+                    for port in self.serial_object.port_list:
+                        with self.serial_object.serial_mutex:
+                            # Check for uplink command
+                            time.sleep(self.buffering_delay)
+                            self.serial_object.write_request_buffer.append([port, "RX"])
+                            time.sleep(self.buffering_delay)
+                            self.serial_object.read_request_buffer.append([port, "RX"])
+                            time.sleep(self.buffering_delay)
+
+                        with self.serial_object.serial_mutex:
+                            if (tx_timer_end - tx_timer_start).total_seconds() >= self.send_telemetry_delay:
+                                # Send down some telemetry
+                                log_line = self.read_last_line_in_data_log()
+                                time.sleep(self.buffering_delay)
+                                self.serial_object.write_request_buffer.append([port, "TX%s" % log_line])
+                                time.sleep(self.buffering_delay)
+                                self.serial_object.read_request_buffer.append([port, "TX"])
+                                time.sleep(self.buffering_delay)
             except:
                 pass
+                tx_timer_end = datetime.datetime.now()
             time.sleep(self.main_delay)
         print("%s << %s << End Thread" % (self.system_name, self.class_name))

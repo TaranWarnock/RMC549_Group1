@@ -14,8 +14,9 @@ if __name__ == "__main__":
     # Create threads
     Logging_Thread              = Logger()
     Serial_Communication_Thread = SerialCommunication(Logging_Thread)
-    System_Control_Thread       = SystemControl(Logging_Thread)
-    Telemetry_Thread            = Telemetry(Logging_Thread)
+    Telemetry_Thread            = Telemetry(Logging_Thread,
+                                            Serial_Communication_Thread)
+    System_Control_Thread       = SystemControl(Logging_Thread, Serial_Communication_Thread)
     Command_And_Control_Thread  = CommandAndControl(Logging_Thread,
                                                     Serial_Communication_Thread,
                                                     Telemetry_Thread,
@@ -24,8 +25,8 @@ if __name__ == "__main__":
     # Start threads
     Logging_Thread.start()
     Serial_Communication_Thread.start()
-    System_Control_Thread.start()
     Telemetry_Thread.start()
+    System_Control_Thread.start()
     Command_And_Control_Thread.start()
 
     while True:
@@ -35,12 +36,12 @@ if __name__ == "__main__":
     # End Threads
     Command_And_Control_Thread.should_thread_run  = False
     Command_And_Control_Thread.join()
-    Telemetry_Thread.should_thread_run            = False
-    Telemetry_Thread.join()
     System_Control_Thread.should_thread_run       = False
     System_Control_Thread.join()
     if socket.gethostname() == "Rocky" or socket.gethostname() == "MajorTom":
         GPIO.cleanup()
+    Telemetry_Thread.should_thread_run = False
+    Telemetry_Thread.join()
     Serial_Communication_Thread.should_thread_run = False
     Serial_Communication_Thread.join()
     Logging_Thread.should_thread_run              = False
