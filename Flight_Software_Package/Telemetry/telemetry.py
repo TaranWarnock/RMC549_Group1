@@ -58,14 +58,22 @@ class Telemetry(FlightSoftwareParent):
                         with self.serial_object.serial_mutex:
                             if (tx_timer_end - tx_timer_start).total_seconds() >= self.send_telemetry_delay:
                                 # Send down some telemetry
+                                tx_timer_start = datetime.datetime.now()
                                 log_line = self.read_last_line_in_data_log()
                                 time.sleep(self.buffering_delay)
                                 self.serial_object.write_request_buffer.append([port, "TX%s" % log_line])
                                 time.sleep(self.buffering_delay)
                                 self.serial_object.read_request_buffer.append([port, "TX"])
                                 time.sleep(self.buffering_delay)
+
+                        with self.serial_object.uplink_commands_mutex:
+                            # All commands deleted OR all threads have seen what they want to.
+                            if len(self.serial_object.last_uplink_commands) == 0 or \
+                                    self.serial_object.last_uplink_seen_by_system_control:
+                                self.serial_object.last_uplink_seen_by_system_control = False
+                                self.serial_object.last_uplink_commands_valid         = False
             except:
                 pass
-                tx_timer_end = datetime.datetime.now()
+            tx_timer_end = datetime.datetime.now()
             time.sleep(self.main_delay)
         print("%s << %s << End Thread" % (self.system_name, self.class_name))

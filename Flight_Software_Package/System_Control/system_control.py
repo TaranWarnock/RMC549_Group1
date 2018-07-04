@@ -77,15 +77,14 @@ class SystemControl(FlightSoftwareParent):
                     with self.serial_object.uplink_commands_mutex:
                         commands_to_remove_and_use = []
                         for command in self.serial_object.last_uplink_commands:
-                            if command.lower() is "cut the mofo":
+                            if command.lower() == 'cut the mofo':
                                 commands_to_remove_and_use.append(command)
                         for command in commands_to_remove_and_use:
                             self.serial_object.last_uplink_commands.remove(command)
-                        if len(self.serial_object.last_uplink_commands) == 0:
-                            self.serial_object.last_uplink_commands_valid = False
+                        self.serial_object.last_uplink_seen_by_system_control = True
 
                     for command in commands_to_remove_and_use:
-                        if command.lower() is "cut the mofo":
+                        if command.lower() == 'cut the mofo':
                             print("CUTTING PAYLOAD")
                             # GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
                             GPIO.output(self.cutoff_pin_bcm, not GPIO.HIGH)
