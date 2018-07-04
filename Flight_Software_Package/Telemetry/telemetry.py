@@ -13,7 +13,7 @@ class Telemetry(FlightSoftwareParent):
         self.send_telemetry_delay = 9
         self.buffering_delay      = 0.05
         super().__init__("Telemetry", logging_object)
-        self.serial_object = serial_object
+        self.serial_object         = serial_object
 
     def load_yaml_settings(self)->None:
         """
