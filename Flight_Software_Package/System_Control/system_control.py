@@ -49,11 +49,13 @@ class SystemControl(FlightSoftwareParent):
         self.cutoff_time_high  = content['cutoff_time_high']
 
     def check_id_and_headers(self):
+        self.start_function_diagnostics("check_id_and_headers")
         with open(self.logger.notifications_log_path, 'r') as f:
             content = f.readlines()
         for line_idx in range(len(content), 0, -1):
             if content[line_idx].split("<<")[0].strip() is "ID":
                 pass # TODO finish looking for header files
+        self.end_function_diagnostics("check_id_and_headers")
 
     def run(self) -> None:
         """
@@ -74,6 +76,7 @@ class SystemControl(FlightSoftwareParent):
                     # If they are delete them from main uplink list before use and then carry out the commands.
                     # if no commands are left in main uplink list then set valid flag to false.
                     # It is done this way to minimize time with mutex lock.
+                    self.start_function_diagnostics("SystemControl_Run()_Uplink_Get")
                     with self.serial_object.uplink_commands_mutex:
                         commands_to_remove_and_use = []
                         for command in self.serial_object.last_uplink_commands:
@@ -82,6 +85,7 @@ class SystemControl(FlightSoftwareParent):
                         for command in commands_to_remove_and_use:
                             self.serial_object.last_uplink_commands.remove(command)
                         self.serial_object.last_uplink_seen_by_system_control = True
+                        self.end_function_diagnostics("SystemControl_Run()_Uplink_Get")
 
                     for command in commands_to_remove_and_use:
                         if command.lower() == 'cut the mofo':
