@@ -200,13 +200,7 @@ void loop() {
     uint8_t len = sizeof(buf);
     if (rf95.recv(buf, &len)) {
       // save to command list
-      if (ground_commands == "") {
-        // command list was empty
-        ground_commands = String((char*)buf);
-      } else {
-        ground_commands.concat(",");
-        ground_commands.concat(String((char*)buf));
-      }
+      ground_commands.concat(String((char*)buf));
     }
   }
   
