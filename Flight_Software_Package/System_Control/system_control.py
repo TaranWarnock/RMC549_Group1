@@ -11,6 +11,7 @@ class SystemControl(FlightSoftwareParent):
     def __init__(self, logging_object: Logger, serial_object: SerialCommunication) -> None:
         self.main_delay        = 0.05
         self.cutoff_pin_bcm    = 18
+        self.cutoff_time_high  = 5
         self.cutoff_conditions = dict()
         self.cutoff_conditions['gps_altitude'] = 30
         self.cutoff_conditions['gps_lat']      = [22, 23]
@@ -42,6 +43,7 @@ class SystemControl(FlightSoftwareParent):
         self.main_delay        = content['main_delay']
         self.cutoff_pin_bcm    = content['cutoff_BCM_pin_number']
         self.cutoff_conditions = content['cut_conditions']
+        self.cutoff_time_high  = content['cutoff_time_high']
 
     def run(self) -> None:
         """
@@ -61,8 +63,11 @@ class SystemControl(FlightSoftwareParent):
                 # print("SYSTEM CONTROL DEBUG: LOG LINE [%s]" % log_line)
                 if self.serial_object.last_uplink_command_valid:
                     if self.serial_object.last_uplink_command.lower() is "cut the mofo":
-                        GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
                         self.serial_object.last_uplink_command_valid = False
+                        print("CUTTING PAYLOAD")
+                        # GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
+                        GPIO.output(self.cutoff_pin_bcm, not GPIO.HIGH)
+                        time.sleep(self.cutoff_time_high)
             except:
                 pass
             time.sleep(self.main_delay)
