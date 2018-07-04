@@ -20,6 +20,9 @@ class SystemControl(FlightSoftwareParent):
         super().__init__("SystemControl", logging_object)
         self.serial_object = serial_object
 
+        self.board_IDs   = None
+        self.data_header = None
+
         try:
             # Configure the cutoff pin
             GPIO.setwarnings(False)
@@ -45,6 +48,13 @@ class SystemControl(FlightSoftwareParent):
         self.cutoff_conditions = content['cut_conditions']
         self.cutoff_time_high  = content['cutoff_time_high']
 
+    def check_id_and_headers(self):
+        with open(self.logger.notifications_log_path, 'r') as f:
+            content = f.readlines()
+        for line_idx in range(len(content), 0, -1):
+            if content[line_idx].split("<<")[0].strip() is "ID":
+                pass # TODO finish looking for header files
+
     def run(self) -> None:
         """
         This function is the main loop of the system control for the RMC 549 balloon(s).
@@ -58,16 +68,28 @@ class SystemControl(FlightSoftwareParent):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
         while self.should_thread_run:
             try:
-                # time.sleep(20)
                 # log_line = self.read_last_line_in_data_log()
-                # print("SYSTEM CONTROL DEBUG: LOG LINE [%s]" % log_line)
-                if self.serial_object.last_uplink_command_valid:
-                    if self.serial_object.last_uplink_command.lower() is "cut the mofo":
-                        self.serial_object.last_uplink_command_valid = False
-                        print("CUTTING PAYLOAD")
-                        # GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
-                        GPIO.output(self.cutoff_pin_bcm, not GPIO.HIGH)
-                        time.sleep(self.cutoff_time_high)
+                if self.serial_object.last_uplink_commands_valid:
+                    # Loop through list of uplink commands and check if any of them are useful to this class.
+                    # If they are delete them from main uplink list before use and then carry out the commands.
+                    # if no commands are left in main uplink list then set valid flag to false.
+                    # It is done this way to minimize time with mutex lock.
+                    with self.serial_object.uplink_commands_mutex:
+                        commands_to_remove_and_use = []
+                        for command in self.serial_object.last_uplink_commands:
+                            if command.lower() is "cut the mofo":
+                                commands_to_remove_and_use.append(command)
+                        for command in commands_to_remove_and_use:
+                            self.serial_object.last_uplink_commands.remove(command)
+                        if len(self.serial_object.last_uplink_commands) == 0:
+                            self.serial_object.last_uplink_commands_valid = False
+
+                    for command in commands_to_remove_and_use:
+                        if command.lower() is "cut the mofo":
+                            print("CUTTING PAYLOAD")
+                            # GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
+                            GPIO.output(self.cutoff_pin_bcm, not GPIO.HIGH)
+                            time.sleep(self.cutoff_time_high)
             except:
                 pass
             time.sleep(self.main_delay)

@@ -16,10 +16,12 @@ class SerialCommunication(FlightSoftwareParent):
 
         self.port_list        = dict()
         self.ports_are_good   = False
-        self.serial_mutex     = threading.Lock()
 
-        self.last_uplink_command_valid = False
-        self.last_uplink_command     = ""
+        self.serial_mutex          = threading.Lock()  # General lock on serial communication
+        self.uplink_commands_mutex = threading.Lock()  # Lock on accessing and using uplink commands
+
+        self.last_uplink_commands_valid = False
+        self.last_uplink_commands       = [""]
 
         self.expect_read_after_write = False  # Used to facilitate a call and respond system by default.
                                               # Can be circumvented by changing state elsewhere in code.
@@ -132,8 +134,10 @@ class SerialCommunication(FlightSoftwareParent):
                 self.log_tx_event(new_data)
             elif type is "RX":
                 self.log_rx_event(new_data)
-                self.last_uplink_command       = new_data
-                self.last_uplink_command_valid = True
+                # Assume uplink commands will be a comma delimited list joined in one string
+                with self.uplink_commands_mutex:
+                    self.last_uplink_commands       = new_data.split(',')
+                    self.last_uplink_commands_valid = True
             self.log_info("received [%s] information over [%s]" % (type, port))
 
 
