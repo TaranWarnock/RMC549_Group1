@@ -94,7 +94,8 @@ void GPSSensorThread::readFromSensor() {
             oldIndx = newIndx;
             newIndx = GPGGA.indexOf(",", oldIndx + 1);
         }
-
+        
+        sensorData.remove(sensorData.length() - 1);
 
 }
 
