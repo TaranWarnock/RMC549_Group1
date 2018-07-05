@@ -121,7 +121,7 @@ void loop() {
     else if (pi_command.equalsIgnoreCase("HEADER"))
     {
       // Pi has asked for data headers
-      full_data.concat("ArdTimeStamp");
+      full_data.concat("ATSms");
 
       for (int i = 0; i < controller.size(); i++) 
       {
@@ -145,7 +145,6 @@ void loop() {
       // get the current time
       unsigned long time = millis();
       full_data.concat(time);
-      full_data.concat("ms");
       
       for (int i = 0; i < controller.size(); i++) {
         // get sensor data
