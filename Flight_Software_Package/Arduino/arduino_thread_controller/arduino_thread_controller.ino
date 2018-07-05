@@ -11,6 +11,9 @@
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
+// Comma separated List of unprocessed commands from ground station
+String ground_commands = "";
+
 // create handler for IMU
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 MPL3115A2 preassure;
@@ -120,7 +123,7 @@ void loop() {
     else if (pi_command.equalsIgnoreCase("HEADER"))
     {
       // Pi has asked for data headers
-      full_data.concat("ArdTimeStamp");
+      full_data.concat("ATSms");
 
       for (int i = 0; i < controller.size(); i++) 
       {
@@ -144,7 +147,6 @@ void loop() {
       // get the current time
       unsigned long time = millis();
       full_data.concat(time);
-      full_data.concat("ms");
       
       for (int i = 0; i < controller.size(); i++) {
         // get sensor data
@@ -176,10 +178,33 @@ void loop() {
       // send OK to the Pi
       Serial.println("OK");
     }
+
+    else if (pi_command.equalsIgnoreCase("RX"))
+    {
+      // Pi has asked for commands from ground
+      // Send the command list
+      Serial.println(ground_commands);
+      // Clear the command list
+      ground_commands = ""; 
+    }
     
     else
     {
       // Do nothing. Pi will know of error on timeout.
     }
   }
+
+  // Check for commands from ground
+  if (rf95.available()) {
+    // Receive the message
+    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t len = sizeof(buf);
+    if (rf95.recv(buf, &len)) {
+      // save to command list
+      ground_commands.concat(String((char*)buf));
+    }
+    ground_commands.concat(String(rf95.lastRssi()));
+    ground_commands.concat(",");
+  }
+  
 }
