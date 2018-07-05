@@ -10,7 +10,7 @@ class Telemetry(FlightSoftwareParent):
 
     def __init__(self, logging_object: Logger, serial_object: SerialCommunication) -> None:
         self.main_delay           = 0.5
-        self.send_telemetry_delay = 9
+        self.data_downlink_delay  = 9
         self.buffering_delay      = 0.05
         super().__init__("Telemetry", logging_object)
         self.serial_object         = serial_object
@@ -27,7 +27,7 @@ class Telemetry(FlightSoftwareParent):
         filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['telemetry']
-        self.send_telemetry_delay = content['send_telemetry_delay']
+        self.data_downlink_delay  = content['data_downlink_delay']
         self.buffering_delay      = content['buffering_delay']
         self.main_delay           = content['main_delay']
 
@@ -56,7 +56,7 @@ class Telemetry(FlightSoftwareParent):
                             time.sleep(self.buffering_delay)
 
                         with self.serial_object.serial_mutex:
-                            if (tx_timer_end - tx_timer_start).total_seconds() >= self.send_telemetry_delay:
+                            if (tx_timer_end - tx_timer_start).total_seconds() >= self.data_downlink_delay:
                                 # Send down some telemetry
                                 tx_timer_start = datetime.datetime.now()
                                 log_line = self.read_last_line_in_data_log()

@@ -10,6 +10,7 @@ class SystemControl(FlightSoftwareParent):
 
     def __init__(self, logging_object: Logger, serial_object: SerialCommunication) -> None:
         self.main_delay        = 0.05
+        self.buffering_delay   = 0.05
         self.cutoff_pin_bcm    = 18
         self.cutoff_time_high  = 5
         self.cutoff_conditions = dict()
@@ -20,7 +21,7 @@ class SystemControl(FlightSoftwareParent):
         super().__init__("SystemControl", logging_object)
         self.serial_object = serial_object
 
-        self.board_IDs   = None
+        self.board_ID    = None
         self.data_header = None
 
         try:
@@ -44,17 +45,36 @@ class SystemControl(FlightSoftwareParent):
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['system_control']
         self.main_delay        = content['main_delay']
+        self.buffering_delay   = content['buffering_delay']
         self.cutoff_pin_bcm    = content['cutoff_BCM_pin_number']
         self.cutoff_conditions = content['cut_conditions']
         self.cutoff_time_high  = content['cutoff_time_high']
 
-    def check_id_and_headers(self):
+    def check_id_and_headers(self) -> None:
+        """
+        This function just looks into the log file for the most recent header and data logging lines.
+        This might not be the most efficient way of doing it either, it could take a lot of time.
+
+        :return: None
+        """
         self.start_function_diagnostics("check_id_and_headers")
+        found_id     = False
+        found_header = False
         with open(self.logger.notifications_log_path, 'r') as f:
             content = f.readlines()
-        for line_idx in range(len(content), 0, -1):
-            if content[line_idx].split("<<")[0].strip() is "ID":
-                pass # TODO finish looking for header files
+        for line_idx in range(len(content)-1, -1, -1):
+            if found_id and found_header:
+                break
+            if content[line_idx].split("<<")[0].strip().lower() == 'id':
+                found_id = True
+                self.board_ID = content[line_idx].split("<<")[-1].strip()
+            if content[line_idx].split("<<")[0].strip().lower() == 'header':
+                found_header     = True
+                self.data_header = content[line_idx].split("<<")[-1].strip()
+        if not found_header:
+            self.data_header = None
+        if not found_id:
+            self.board_ID = None
         self.end_function_diagnostics("check_id_and_headers")
 
     def run(self) -> None:
@@ -70,7 +90,8 @@ class SystemControl(FlightSoftwareParent):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
         while self.should_thread_run:
             try:
-                # log_line = self.read_last_line_in_data_log()
+                self.check_id_and_headers()
+                # log_line = self.read_last_line_in_data_log() # TODO conditional payload cutting
                 if self.serial_object.last_uplink_commands_valid:
                     # Loop through list of uplink commands and check if any of them are useful to this class.
                     # If they are delete them from main uplink list before use and then carry out the commands.
@@ -80,7 +101,7 @@ class SystemControl(FlightSoftwareParent):
                     with self.serial_object.uplink_commands_mutex:
                         commands_to_remove_and_use = []
                         for command in self.serial_object.last_uplink_commands:
-                            if command.lower() == 'cut the mofo':
+                            if command.lower() == 'cut the mofo' or command.lower() == 'send header':
                                 commands_to_remove_and_use.append(command)
                         for command in commands_to_remove_and_use:
                             self.serial_object.last_uplink_commands.remove(command)
@@ -91,8 +112,21 @@ class SystemControl(FlightSoftwareParent):
                         if command.lower() == 'cut the mofo':
                             print("CUTTING PAYLOAD")
                             # GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
-                            GPIO.output(self.cutoff_pin_bcm, not GPIO.HIGH)
+                            GPIO.output(self.cutoff_pin_bcm, GPIO.HIGH)
                             time.sleep(self.cutoff_time_high)
+                            GPIO.output(self.cutoff_pin_bcm, GPIO.LOW)
+
+                        if command.lower() == 'send header':
+                            if self.serial_object.ports_are_good:
+                                for port in self.serial_object.port_list:
+                                    with self.serial_object.serial_mutex:
+                                        # send down the last known header file
+                                        time.sleep(self.buffering_delay)
+                                        self.serial_object.write_request_buffer.append([port, "TX%s" % self.data_header])
+                                        time.sleep(self.buffering_delay)
+                                        self.serial_object.read_request_buffer.append([port, "TX"])
+                                        time.sleep(self.buffering_delay)
+
             except:
                 pass
             time.sleep(self.main_delay)
