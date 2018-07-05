@@ -106,7 +106,7 @@ class FlightSoftwareParent(threading.Thread):
         :param log_message: Info message to log
         :return: None
         """
-        self.logger.data_logging_buffer.append("%s, %s\n" % (
+        self.logger.data_logging_buffer.append("%s,%s\n" % (
             datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), log_message))
 
     def read_last_line_in_data_log(self) -> str:
