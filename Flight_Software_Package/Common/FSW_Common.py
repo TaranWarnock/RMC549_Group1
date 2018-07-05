@@ -11,6 +11,7 @@ import datetime
 from sys import platform
 if socket.gethostname() == "Rocky" or socket.gethostname() == "MajorTom":
     import RPi.GPIO as GPIO
+    import smbus
 from Logger.logger import *
 
 

@@ -179,7 +179,7 @@ void loop() {
       Serial.println("OK");
     }
 
-    else if (pi_command.equalsIgnoreCase("RX"))
+    else if ((pi_command.substring(0, 2)).equalsIgnoreCase("RX"))
     {
       // Pi has asked for commands from ground
       // Send the command list

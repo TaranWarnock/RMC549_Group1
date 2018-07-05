@@ -4,6 +4,7 @@ from Logger.logger import *
 from Serial_Communication.serial_communication import *
 from System_Control.system_control import *
 from Telemetry.telemetry import *
+from I2C.i2c import I2C_Photosensor
 
 if __name__ == "__main__":
     """
@@ -11,9 +12,18 @@ if __name__ == "__main__":
     
     Writen by Daniel Letros, 2018-06-27
     """
+
+    # Instantiate I2C Photosensors connected to Pi
+    photo_sensor_one   = I2C_Photosensor(0x39, "PiPto1")
+    photo_sensor_two   = I2C_Photosensor(0x49, "PiPto2")
+    photo_sensor_three = I2C_Photosensor(0x59, "PiPto3")
+
     # Create threads
     Logging_Thread              = Logger()
-    Serial_Communication_Thread = SerialCommunication(Logging_Thread)
+    Serial_Communication_Thread = SerialCommunication(Logging_Thread, [photo_sensor_one,
+                                                                       photo_sensor_two,
+
+                                                                       photo_sensor_three])
     Telemetry_Thread            = Telemetry(Logging_Thread,
                                             Serial_Communication_Thread)
     System_Control_Thread       = SystemControl(Logging_Thread, Serial_Communication_Thread)

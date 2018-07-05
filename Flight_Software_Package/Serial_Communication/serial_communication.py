@@ -8,7 +8,14 @@ class SerialCommunication(FlightSoftwareParent):
     Written by Daniel Letros, 2018-06-27
     """
 
-    def __init__(self, logging_object: Logger) -> None:
+    def __init__(self, logging_object: Logger, list_of_photosensors: list) -> None:
+
+        # Serial_communication class will handle the data acq from the i2c pi sensors
+        self.list_of_photosensors = []
+        for sensor in list_of_photosensors:
+            if sensor.sensor_is_valid:
+                self.list_of_photosensors.append(sensor)
+
         self.default_buadrate = 9600
         self.default_timeout = 0
         self.main_delay = 0.5
@@ -128,10 +135,41 @@ class SerialCommunication(FlightSoftwareParent):
                 self.port_list[port].reset_input_buffer()
                 return
             elif type is "DATA":
+
+                # Try to rapid get sensor data. Should be multithreaded for
+                # max time resolution but this has to be quick and dirty right now.
+                current_sensor_data   = []
+                for sensor in self.list_of_photosensors:
+                    if sensor.sensor_is_valid:
+                        current_sensor_data.append(sensor._get_data())
+                # Append Pi photo sensor data if valid
+                for data in current_sensor_data:
+                    # Valid photo sensor so append the header information
+                    if new_data[-1] != ",":
+                        # Append ',' if not there at end
+                        new_data.append(",")
+                    new_data.append(data)
+                # remove ',' at end if needed
+                if new_data[-1] == ",":
+                    new_data = new_data[0:-1]
+
                 self.log_data(new_data)
             elif type is "ID":
                 self.log_id(new_data)
             elif type is "HEADER":
+
+                # Append Pi photo sensor data if valid
+                for sensor in self.list_of_photosensors:
+                    if sensor.sensor_is_valid:
+                        # Valid photo sensor so append the header information
+                        if new_data[-1] != ",":
+                            # Append ',' if not there at end
+                            new_data.append(",")
+                        new_data.append(sensor.data_header_addition)
+                    # remove ',' at end if needed
+                    if new_data[-1] == ",":
+                        new_data = new_data[0:-1]
+
                 self.log_header(new_data)
             elif type is "TX":
                 self.log_tx_event(new_data)
