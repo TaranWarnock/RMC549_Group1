@@ -202,6 +202,8 @@ void loop() {
       // save to command list
       ground_commands.concat(String((char*)buf));
     }
+    ground_commands.concat(String(rf95.lastRssi()));
+    ground_commands.concat(",");
   }
   
 }
