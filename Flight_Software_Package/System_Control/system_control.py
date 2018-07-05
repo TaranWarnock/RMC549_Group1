@@ -122,7 +122,7 @@ class SystemControl(FlightSoftwareParent):
                                     with self.serial_object.serial_mutex:
                                         # send down the last known header file
                                         time.sleep(self.buffering_delay)
-                                        self.serial_object.write_request_buffer.append([port, "TX%s" % self.data_header])
+                                        self.serial_object.write_request_buffer.append([port, "TX{%s" % self.data_header])
                                         time.sleep(self.buffering_delay)
                                         self.serial_object.read_request_buffer.append([port, "TX"])
                                         time.sleep(self.buffering_delay)
