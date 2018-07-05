@@ -18,10 +18,14 @@ String ground_commands = "";
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 MPL3115A2 preassure;
 
+// light sensor
+TSL2561 tsl(TSL2561_ADDR_FLOAT);
+
 // create thread for each sensor
 SensorThread* gps_thread = new GPSSensorThread();
 SensorThread* imu_thread = new IMUSensorThread(&bno, &preassure);
 SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
+SensorThread* photo_thread = new PhotoSensorThread(&tsl);
 
 // create controller to hold the threads
 ThreadController controller = ThreadController();
@@ -30,6 +34,7 @@ bool doIMU;
 bool doTelemetry;
 
 void setup() {
+
   // put your setup code here, to run once:
   // ------------------------ Changing the baud rate of GPS Serial1 port ---------------------------
   Serial1.begin(4800);
@@ -52,6 +57,12 @@ void setup() {
     // could send an error message to the Pi here
   }
 
+  // Initialize the photosensor
+  if(!tsl.begin()) {
+    // error?
+  }
+  tsl.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
+  tsl.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
 
   preassure.setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
   preassure.setOversampleRate(7); // Set Oversample to the recommended 128
@@ -80,6 +91,7 @@ void setup() {
   controller.add(gps_thread);
   controller.add(imu_thread);
   controller.add(geiger_thread);
+  controller.add(photo_thread);
 }
 
 void loop() {

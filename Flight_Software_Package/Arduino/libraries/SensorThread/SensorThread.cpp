@@ -216,23 +216,10 @@ void GeigerSensorThread::ISR2() {
 
 PhotoSensorThread::PhotoSensorThread(TSL2561* tslPtr) : SensorThread::SensorThread("PHOTO", "VIS,IR") {
     m_tslPtr = tslPtr; 
-
-    if (m_tslPtr->begin()) { 
-        // You can change the gain on the fly, to adapt to brighter/dimmer light situations
-        m_tslPtr->setGain(TSL2561_GAIN_0X);         // set no gain (for bright situtations)
-        // tsl.setGain(TSL2561_GAIN_16X);      // set 16x gain (for dim situations)
-        
-        // Changing the integration time gives you a longer time over which to sense light
-        // longer timelines are slower, but are good in very low light situtations!
-        m_tslPtr->setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
-        //tsl.setTiming(TSL2561_INTEGRATIONTIME_101MS);  // medium integration time (medium light)
-        //tsl.setTiming(TSL2561_INTEGRATIONTIME_402MS);  // longest integration time (dim light)
-        
-        // Now we're ready to get readings!
-    }
 }
 
 void PhotoSensorThread::readFromSensor() {
+    
     uint32_t lum = m_tslPtr->getFullLuminosity();
     uint16_t ir, full;
     ir = lum >> 16;
@@ -243,3 +230,4 @@ void PhotoSensorThread::readFromSensor() {
     sensorData.concat(",");
     sensorData.concat(String(ir));
 }
+
