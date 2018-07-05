@@ -39,6 +39,8 @@ void setup() {
   // -----------------------------------------------------------------------------------------------
   
   Serial1.begin(115200); // Setting up GPS serial com
+  Serial1.write("$PTNLSCR,,,,,,,3,,*5B\r\n"); // A safety precaution to keep GPS module in the AIR mode.
+  delay(1000);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }

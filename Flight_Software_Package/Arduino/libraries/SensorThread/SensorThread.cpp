@@ -12,17 +12,19 @@ void GPSSensorThread::readFromSensor() {
         bool myInterrupt = false;
         int lineCount = 0;
         sensorData = "";
-        String NMEA = "";
+        String NMEA1 = "";
+        String NMEA2 = "";
+        String GPGGA = "";
+        String GPVTG = "";
 
-
         while(Serial1.available())
           Serial1.read();
         while(Serial1.available())
           Serial1.read();
-        while(Serial1.available())
-          Serial1.read();
-        while(Serial1.available())
-          Serial1.read();
+//        while(Serial1.available())
+//          Serial1.read();
+//        while(Serial1.available())
+//          Serial1.read();
 
 
         while(true)
@@ -32,48 +34,68 @@ void GPSSensorThread::readFromSensor() {
                 if (c == '$'){
                     startOfNewNMEA = true;
                     lineCount++;
+                    if (lineCount == 2){
+                        NMEA1 = NMEA2;
+                        NMEA2 = "";
+                    }
                 }
                 if (lineCount > 2){
                     myInterrupt = true;
                     break;
                 }
                 if (startOfNewNMEA)
-                    NMEA.concat(c);
+                    NMEA2.concat(c);
             }
         }
 
-        NMEA.trim();
-        NMEA.replace("\n",",");
-        NMEA.replace("\r",",");
+        NMEA1.trim();
+        NMEA1.replace("\n","");
+        NMEA1.replace("\r","");
+        NMEA2.trim();
+        NMEA2.replace("\n","");
+        NMEA2.replace("\r","");
+//        sensorData.concat("|");
+//        sensorData.concat(NMEA1);
+//        sensorData.concat("|");
+//        sensorData.concat(NMEA2);
 
-        if (!NMEA[NMEA.length()-4] == '*') {
-            sensorData = "NaN";
+//        Sentances were not read or recieved properly
+        if (!NMEA1[NMEA1.length()-4] == '*') {
+            sensorData = "NaN,NaN,NaN,NaN,NaN";
+            return;
+        }
+        if (!NMEA2[NMEA2.length()-4] == '*') {
+            sensorData = "NaN,NaN,NaN,NaN,NaN";
             return;
         }
 
-
-//        Sorting, so GPGGA will be before GPVTG
-        if (NMEA.startsWith("$GPVTG")){
-            int indx = NMEA.indexOf("$GPGGA");
-            NMEA = NMEA.substring(indx) + "," + NMEA.substring(0, indx);
+        if (NMEA1.startsWith("$GPGGA")){
+            GPGGA = NMEA1;
+            GPVTG = NMEA2;
+        }
+        else {
+            GPVTG = NMEA1;
+            GPGGA = NMEA2;
         }
 
 //        sensorData.concat(NMEA);
 //        sensorData.concat("|");
 
+//        Processing GPGGA sentance
         int valueCounter = 0;
         int oldIndx = 0;
-        int newIndx = NMEA.indexOf(",");
+        int newIndx = GPGGA.indexOf(",");
 
         while(newIndx > 0){
             valueCounter++;
-            if (valueCounter == 2 || valueCounter == 3 || valueCounter == 5 || valueCounter == 10 || valueCounter == 24){
-                sensorData.concat(NMEA.substring(oldIndx + 1, newIndx + 1));
-            }
-            oldIndx = newIndx;
-            newIndx = NMEA.indexOf(",", oldIndx + 1);
-        }
+            if (valueCounter == 2 || valueCounter == 3 || valueCounter == 5 || valueCounter == 8 || valueCounter == 10 || valueCounter == 11)
+                sensorData.concat(GPGGA.substring(oldIndx + 1, newIndx + 1));
 
+            oldIndx = newIndx;
+            newIndx = GPGGA.indexOf(",", oldIndx + 1);
+        }
+        
+        sensorData.remove(sensorData.length() - 1);
 
 }
 

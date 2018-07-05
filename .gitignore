@@ -6,3 +6,4 @@
 *.xml
 __pycache__/
 .idea/*
+logs/
