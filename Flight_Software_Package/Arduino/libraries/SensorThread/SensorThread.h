@@ -3,6 +3,7 @@
 
 #include <Thread.h>
 #include <Adafruit_BNO055.h>
+#include <TSL2561.h>
 #include <utility/imumaths.h>   // used in IMU code
 #include "SparkFunMPL3115A2.h"
 
@@ -89,6 +90,17 @@ class GeigerSensorThread : public SensorThread {
     public:
             GeigerSensorThread(int interruptPin1, int interruptPin2);
 
+};
+
+class PhotoSensorThread : public SensorThread {
+    private:
+        void readFromSensor() override;
+        
+    private:
+        TSL2561* m_tslPtr;    // pointer to sensor handler
+
+    public:
+        PhotoSensorThread(TSL2561* tslPtr);
 };
 
 #endif
