@@ -70,7 +70,7 @@ class FlightSoftwareParent(threading.Thread):
         :return: None
         """
         self.logger.notifications_logging_buffer.append("ERROR << %s << %s << %s << %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
     def log_warning(self, log_message: str) -> None:
         """
@@ -82,7 +82,7 @@ class FlightSoftwareParent(threading.Thread):
         :return: None
         """
         self.logger.notifications_logging_buffer.append("WARNING << %s << %s << %s << %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
     def log_info(self, log_message: str) -> None:
         """
@@ -94,7 +94,7 @@ class FlightSoftwareParent(threading.Thread):
         :return: None
         """
         self.logger.notifications_logging_buffer.append("INFO << %s << %s << %s << %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
     def log_data(self, log_message: str) -> None:
         """
@@ -106,7 +106,7 @@ class FlightSoftwareParent(threading.Thread):
         :return: None
         """
         self.logger.data_logging_buffer.append("%s, %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), log_message))
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), log_message))
 
     def read_last_line_in_data_log(self) -> str:
         """
@@ -129,11 +129,25 @@ class FlightSoftwareParent(threading.Thread):
         return content
 
     def start_function_diagnostics(self, function_name: str):
+        """
+        This function will begin function diagnostics on all functions other then logger functions
+
+        Written by Daniel Letros, 2018-06-27
+
+        :return: None
+        """
         if self.run_function_diagnostics:
             self.current_diagnostics_function_name = function_name
             self.function_diagnostics_start_time   = datetime.datetime.now()
 
     def end_function_diagnostics(self, function_name: str):
+        """
+        This function will end function diagnostics on all functions other then logger functions
+
+        Written by Daniel Letros, 2018-06-27
+
+        :return: None
+        """
         if self.run_function_diagnostics:
             if self.current_diagnostics_function_name != function_name:
                 print("DIAGNOSTICS << NAMES DO NOT MATCH << GOT [%s] EXPECTED [%s]"

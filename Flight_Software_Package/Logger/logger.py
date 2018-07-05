@@ -148,11 +148,25 @@ class Logger(threading.Thread):
         self.end_logger_diagnostics("write_data_to_log")
 
     def start_logger_diagnostics(self, function_name: str):
+        """
+        This function will start function diagnostics on all logger functions
+
+        Written by Daniel Letros, 2018-06-27
+
+        :return: None
+        """
         if self.run_logger_diagnostics:
             self.current_logger_diagnostics_function_name = function_name
             self.function_logger_diagnostics_start_time   = datetime.datetime.now()
 
     def end_logger_diagnostics(self, function_name: str):
+        """
+        This function will end function diagnostics on all logger functions
+
+        Written by Daniel Letros, 2018-06-27
+
+        :return: None
+        """
         if self.run_logger_diagnostics:
             if self.current_logger_diagnostics_function_name != function_name:
                 print("DIAGNOSTICS << NAMES DO NOT MATCH << GOT [%s] EXPECTED [%s]"
@@ -164,6 +178,13 @@ class Logger(threading.Thread):
                      self.function_logger_diagnostics_start_time).total_seconds()))
 
     def run(self):
+        """
+        This is the main function of the logging thread.
+
+        Written by Daniel Letros, 2018-06-27
+
+        :return: None
+        """
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
         while self.should_thread_run:
             if len(self.notifications_logging_buffer) > 0:

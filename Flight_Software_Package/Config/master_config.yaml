@@ -16,6 +16,8 @@ serial_communication:
 
 system_control:
     main_delay:                   3                                        # Delay [sec] for the run() function of thread
+    buffering_delay:              0                                        # Delay [sec] for different commanding operations
+    cutoff_time_high:             5                                        # Time [sec] the cutoff pin will be triggered
     cutoff_BCM_pin_number:        18                                       # The pin number in BCM layout of the cutoff relay
     cut_conditions:                                                        # Conditions which if met or exceeded will cut the payload
         gps_lat:                                                           # GPS Latitude [deg] limits for payload cutoff
@@ -29,10 +31,10 @@ system_control:
         time:                                                              # Clock time which will trigger cutoff
             -                     "22:22"
 telemetry:
-    main_delay:                   0.05                                     # Delay [sec] for the run() function of thread
+    main_delay:                   0.5                                      # Delay [sec] for the run() function of thread
+    buffering_delay:              0                                        # Delay [sec] for different commanding operations
+    data_downlink_delay:          9                                        # Delay [sec] for sending down data through telemetry
 
 command_and_control:
     buffering_delay:              0                                        # Delay [sec] for different commanding operations
     que_data_delay:               3                                        # Delay [sec] for queuing new round of data
-    telemetry_num_data_intervals: 3                                        # Number of que data that occur before sending telemetry
-

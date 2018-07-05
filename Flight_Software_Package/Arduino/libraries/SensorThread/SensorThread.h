@@ -46,7 +46,7 @@ class GPSSensorThread : public SensorThread {
         void readFromSensor() override;
 
     public:
-        GPSSensorThread() : SensorThread("GPS", "UTC,Latitude(DegMin),Longitude(DegMin),NumberOfSatellitesUsed,Altitude,UnitsAltitude") {}
+        GPSSensorThread() : SensorThread("GPS", "UTC,LtDgMn,LnDgMn,Nsat,Alt,Altu") {}
 };
 
 class IMUSensorThread : public SensorThread {
@@ -62,15 +62,15 @@ class IMUSensorThread : public SensorThread {
 
     public:
         IMUSensorThread(Adafruit_BNO055* bno, MPL3115A2* preassure) : SensorThread(
-                "IMU,PressureSensor",
-                "Accelerometer_x(m/s^2),Accelerometer_y(m/s^2),Accelerometer_z(m/s^2),"
-                "Gyroscope_x(rad/s),Gyroscope_y(rad/s),Gyroscope_z(rad/s),"
-                "Magnetometer_x(uT),Magnetometer_y(uT),Magnetometer_z(uT),"
-                "Euler_x(deg),Euler_y(deg),Euler_z(deg),"
-                "LinearAcceleration_x(m/s^2),LinearAcceleration_y(m/s^2),LinearAcceleration_z(m/s^2),"
-                "Gravity_x(m/s^2),Gravity_y(m/s^2),Gravity_z(m/s^2),"
-                "Temperature(C),SystemCalibration(0-3),GyroCalibration(0-3),"
-                "AccelerometerCalibration(0-3),MagnetometerCalibration(0-3),Pressure(Pa),TemperaturePressureSensor(C)") {
+                "IMU,Pr",
+                "Acxms2,Acyms2,Aczms2,"
+                "Gyxrs,Gyyrs,Gyzrs,"
+                "MgxuT,MgyuT,MgzuT,"
+                "Elxdg,Elydg,Elzdg,"
+                "LAcxms2,LAcyms2,LAczms2,"
+                "Gvxms2,Gvyms2,Gvzms2,"
+                "TC,SyCl03,GyCl03,"
+                "AcCl03,MgCl03,PrPa,TPrC") {
             bnoPtr = bno;
             preassurePtr = preassure;
         }
