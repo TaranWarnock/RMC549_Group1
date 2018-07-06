@@ -176,6 +176,7 @@ class Logger(threading.Thread):
                   %(function_name,
                     (self.function_logger_diagnostics_end_time -
                      self.function_logger_diagnostics_start_time).total_seconds()))
+            print("\n")
 
     def run(self):
         """

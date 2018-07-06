@@ -17,8 +17,9 @@ class SerialCommunication(FlightSoftwareParent):
                 self.list_of_photosensors.append(sensor)
 
         self.default_buadrate = 9600
-        self.default_timeout = 0
-        self.main_delay = 0.5
+        self.default_timeout   = 8
+        self.main_delay        = 0.5
+        self.reconnection_wait = 5
         super().__init__("SerialCommunication", logging_object)
 
         self.port_list        = dict()
@@ -49,9 +50,10 @@ class SerialCommunication(FlightSoftwareParent):
         filename = os.path.join(dirname, self.yaml_config_path)
         with open(filename, 'r') as stream:
             content = yaml.load(stream)['serial_communication']
-        self.default_buadrate = content['default_baud_rate']
-        self.default_timeout  = content['default_timeout']
-        self.main_delay       = content['main_delay']
+        self.default_buadrate  = content['default_baud_rate']
+        self.default_timeout   = content['default_timeout']
+        self.reconnection_wait = content['reconnection_wait']
+        self.main_delay        = content['main_delay']
 
 
     def find_serial_ports(self, baudrate: int = None, timeout: float = None) -> None:
@@ -104,7 +106,7 @@ class SerialCommunication(FlightSoftwareParent):
         try:
             result.remove('/dev/ttyAMA0')  # AMA0 seems to be always "active" as is the Pi's PL011, ignore.
         except:
-            pass
+            self.log_error("Could not remove [/dev/ttyAMA0] from port list.")
         for port in result:
             self.port_list[port] = serial.Serial(port=port, baudrate=baudrate,
                                parity=serial.PARITY_NONE,
@@ -132,12 +134,7 @@ class SerialCommunication(FlightSoftwareParent):
             new_data = new_data.replace("\r", "")
             if new_data == "" and type != "RX":
                 self.log_error("[%s] returned no data. Attempting reconnect." % port)
-                time.sleep(self.default_timeout)
-                self.ports_are_good          = False
-                self.read_request_buffer     = []
-                self.write_request_buffer    = []
-                self.expect_read_after_write = False
-                self.port_list[port].reset_input_buffer()
+                self.reset_serial_connection()
                 return
             elif type == "DATA":
 
@@ -190,7 +187,7 @@ class SerialCommunication(FlightSoftwareParent):
 
         except Exception as err:
             self.log_error(str(err))
-            self.ports_are_good = False
+            self.reset_serial_connection()
         self.end_function_diagnostics("readline_from_serial")
 
     def write_to_serial(self, port: str, message: str) -> None:
@@ -213,8 +210,7 @@ class SerialCommunication(FlightSoftwareParent):
                 self.log_info("sent [%s] over [%s]" % (message, port))
         except Exception as err:
             self.log_error(str(err))
-            self.port_list[port].reset_output_buffer()
-            self.ports_are_good = False
+            self.reset_serial_connection()
         self.end_function_diagnostics("write_to_serial")
 
     def log_id(self, log_message: str) -> None:
@@ -265,6 +261,25 @@ class SerialCommunication(FlightSoftwareParent):
         self.logger.notifications_logging_buffer.append("RX << %s << %s << %s << %s\n" % (
             datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
+    def reset_serial_connection(self):
+        """
+        This function attempts a reset and reconnection to all serial connected devices in event of fail.
+
+        Written by Daniel Letros, 2018-07-06
+
+        :return: None
+        """
+        self.start_function_diagnostics("reset_serial_connection")
+        time.sleep(self.reconnection_wait)
+        self.ports_are_good          = False
+        self.read_request_buffer     = []
+        self.write_request_buffer    = []
+        self.expect_read_after_write = False
+        for port in self.port_list:
+            self.port_list[port].reset_input_buffer()
+            self.port_list[port].reset_output_buffer()
+        self.end_function_diagnostics("reset_serial_connection")
+
     def run(self):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
         while self.should_thread_run:
@@ -277,7 +292,7 @@ class SerialCommunication(FlightSoftwareParent):
                     self.write_to_serial(self.write_request_buffer[0][0], self.write_request_buffer[0][1])
                     del self.write_request_buffer[0]
                     self.expect_read_after_write = True
-            except:
-                pass
+            except Exception as err:
+                self.log_error("Main function error [%s]" % str(err))
             time.sleep(self.main_delay)
         print("%s << %s << Exiting Thread" % (self.system_name, self.class_name))
