@@ -157,3 +157,4 @@ class FlightSoftwareParent(threading.Thread):
             print("DIAGNOSTICS << [%s] << TIME_TAKEN [%f]"
                   %(function_name,
                     (self.function_diagnostics_end_time - self.function_diagnostics_start_time).total_seconds()))
+            print("\n")

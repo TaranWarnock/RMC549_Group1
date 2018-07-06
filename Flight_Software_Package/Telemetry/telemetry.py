@@ -75,8 +75,8 @@ class Telemetry(FlightSoftwareParent):
                                         self.serial_object.last_uplink_seen_by_system_control:
                                     self.serial_object.last_uplink_seen_by_system_control = False
                                     self.serial_object.last_uplink_commands_valid         = False
-            except:
-                pass
-                tx_timer_end = datetime.datetime.now()
+            except Exception as err:
+                self.log_error("Main function error [%s]" % str(err))
+            tx_timer_end = datetime.datetime.now()
             time.sleep(self.main_delay)
         print("%s << %s << End Thread" % (self.system_name, self.class_name))
