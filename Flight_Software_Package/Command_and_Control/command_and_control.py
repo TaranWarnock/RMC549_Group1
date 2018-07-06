@@ -87,6 +87,5 @@ class CommandAndControl(FlightSoftwareParent):
                     self.log_warning("Don't see any devices.")
             except Exception as err:
                 self.log_error("Main function error [%s]" % str(err))
-                self.serial_object.reset_serial_connection()
             time.sleep(self.que_data_delay)
         print("%s << %s << End Thread" % (self.system_name, self.class_name))
