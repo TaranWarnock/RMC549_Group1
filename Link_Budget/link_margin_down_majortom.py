@@ -14,6 +14,10 @@ Reference: https://electronics.stackexchange.com/questions/277722/how-to-calcula
         - bandwidth, Bw = 125 kHz
         - coding rate, Cr = 4/5
         - spreading factor, Sf = 128 chips/symbol
+
+Reference: http://www.zdacomm.com/400-mhz-uhf-antenna/400-mhz-uhf-omni-directional-antenna/
+    Omnidirectional antennas can have gain as low as 2 dB. We will calculate
+    the link margin for this worst case scenario.
 """
 
 import numpy as np
@@ -40,7 +44,7 @@ if __name__ == '__main__':
     space_loss_dB = 10.0 * np.log10(space_loss)
 
     # Step 3: Determine Values
-    receiver_gain_dB = 10 * np.log10(1.64)  # typical dipole gain -- not sure what ground antenna is yet
+    receiver_gain_dB = 2.0  # omnidirectional antenna
     receiver_system_noise_K = 600.0     # using typical value from PH 547 assignment
     system_noise_dB = 10.0 * np.log10(receiver_system_noise_K)
     data_rate_bps = 5468.75
