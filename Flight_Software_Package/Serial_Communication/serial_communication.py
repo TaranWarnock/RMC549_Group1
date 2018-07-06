@@ -294,6 +294,6 @@ class SerialCommunication(FlightSoftwareParent):
                     self.expect_read_after_write = True
             except Exception as err:
                 self.log_error("Main function error [%s]" % str(err))
-                self.reset_serial_connection()
+                # self.reset_serial_connection()
             time.sleep(self.main_delay)
         print("%s << %s << Exiting Thread" % (self.system_name, self.class_name))
