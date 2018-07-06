@@ -16,6 +16,8 @@ void GPSSensorThread::readFromSensor() {
         String NMEA2 = "";
         String GPGGA = "";
         String GPVTG = "";
+//        int timeCheck = 8000;
+//        active = true;
 
         while(Serial1.available())
           Serial1.read();
@@ -26,8 +28,9 @@ void GPSSensorThread::readFromSensor() {
 //        while(Serial1.available())
 //          Serial1.read();
 
+        float startingTime = millis();
 
-        while(true)
+        while(true && millis() < startingTime + timeCheck)
         {
             if (Serial1.available() > 0){
                 char c = Serial1.read();
@@ -48,6 +51,14 @@ void GPSSensorThread::readFromSensor() {
             }
         }
 
+        if (millis() >= startingTime + timeCheck){
+//            active = false;
+            sensorData = ",,,,,";
+            timeCheck = 2000;
+            return;
+        }
+
+        timeCheck = 8000;
         NMEA1.trim();
         NMEA1.replace("\n","");
         NMEA1.replace("\r","");
@@ -61,11 +72,11 @@ void GPSSensorThread::readFromSensor() {
 
 //        Sentances were not read or recieved properly
         if (!NMEA1[NMEA1.length()-4] == '*') {
-            sensorData = "NaN,NaN,NaN,NaN,NaN";
+            sensorData = ",,,,,";
             return;
         }
         if (!NMEA2[NMEA2.length()-4] == '*') {
-            sensorData = "NaN,NaN,NaN,NaN,NaN";
+            sensorData = ",,,,,";
             return;
         }
 

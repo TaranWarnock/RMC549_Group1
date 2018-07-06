@@ -41,6 +41,9 @@ class SensorThread : public Thread {
 
 class GPSSensorThread : public SensorThread {
     private:
+//        bool active = true; // variable to decide if GPS is working
+        int timeCheck = 8000; // milliseconds
+
         // Function for a single GPS reading
         void readFromSensor() override;
 
