@@ -214,20 +214,40 @@ void GeigerSensorThread::ISR2() {
     }
 }
 
-PhotoSensorThread::PhotoSensorThread(TSL2561* tslPtr) : SensorThread::SensorThread("PHOTO", "VIS,IR") {
-    m_tslPtr = tslPtr; 
+PhotoSensorThread::PhotoSensorThread(TSL2561* tslPtr0, TSL2561* tslPtr1, TSL2561* tslPtr2) : SensorThread::SensorThread("PHOTO", "VIS0,IR0,VIS1,IR1,VIS2,IR2") {
+    m_tslPtr[0] = tslPtr0;
+    m_tslPtr[1] = tslPtr1;
+    m_tslPtr[2] = tslPtr2;
 }
 
 void PhotoSensorThread::readFromSensor() {
     
-    uint32_t lum = m_tslPtr->getFullLuminosity();
-    uint16_t ir, full;
-    ir = lum >> 16;
-    full = lum & 0xFFFF;
+    uint32_t lum0, lum1, lum2;
+    uint16_t ir0, ir1, ir2, full0, full1, full2;
+
+    lum0 = m_tslPtr[0]->getFullLuminosity();
+    ir0 = lum0 >> 16;
+    full0 = lum0 & 0xFFFF;
+    
+    lum1 = m_tslPtr[1]->getFullLuminosity();
+    ir1 = lum1 >> 16;
+    full1 = lum1 & 0xFFFF;
+    
+    lum2 = m_tslPtr[2]->getFullLuminosity();
+    ir2 = lum2 >> 16;
+    full2 = lum2 & 0xFFFF;
     
     sensorData = "";
-    sensorData.concat(String(full));
+    sensorData.concat(String(full0));
     sensorData.concat(",");
-    sensorData.concat(String(ir));
+    sensorData.concat(String(ir0));
+    sensorData.concat(",");
+    sensorData.concat(String(full1));
+    sensorData.concat(",");
+    sensorData.concat(String(ir1));    
+    sensorData.concat(",");
+    sensorData.concat(String(full2));
+    sensorData.concat(",");
+    sensorData.concat(String(ir2));
 }
 

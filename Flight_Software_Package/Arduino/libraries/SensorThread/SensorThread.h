@@ -97,10 +97,10 @@ class PhotoSensorThread : public SensorThread {
         void readFromSensor() override;
         
     private:
-        TSL2561* m_tslPtr;    // pointer to sensor handler
+        TSL2561* m_tslPtr[3];    // pointers to sensor handlers
 
     public:
-        PhotoSensorThread(TSL2561* tslPtr);
+        PhotoSensorThread(TSL2561* tslPtr0, TSL2561* tslPtr1, TSL2561* tslPtr2);
 };
 
 #endif

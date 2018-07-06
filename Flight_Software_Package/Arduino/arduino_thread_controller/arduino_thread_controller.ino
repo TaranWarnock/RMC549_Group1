@@ -19,13 +19,15 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
 MPL3115A2 preassure;
 
 // light sensor
-TSL2561 tsl(TSL2561_ADDR_FLOAT);
+TSL2561 tsl0(TSL2561_ADDR_FLOAT);
+TSL2561 tsl1(TSL2561_ADDR_LOW);
+TSL2561 tsl2(TSL2561_ADDR_HIGH);
 
 // create thread for each sensor
 SensorThread* gps_thread = new GPSSensorThread();
 SensorThread* imu_thread = new IMUSensorThread(&bno, &preassure);
 SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
-SensorThread* photo_thread = new PhotoSensorThread(&tsl);
+SensorThread* photo_thread = new PhotoSensorThread(&tsl0, &tsl1, &tsl2);
 
 // create controller to hold the threads
 ThreadController controller = ThreadController();
@@ -57,12 +59,24 @@ void setup() {
     // could send an error message to the Pi here
   }
 
-  // Initialize the photosensor
-  if(!tsl.begin()) {
+  // Initialize photosensor 0
+  if(!tsl0.begin()) {
     // error?
   }
-  tsl.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
-  tsl.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
+  tsl0.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
+  tsl0.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
+  // Initialize 2nd photosensor 1
+  if(!tsl1.begin()) {
+    // error?
+  }
+  tsl1.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
+  tsl1.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
+  // Initialize the photosensor 2
+  if(!tsl2.begin()) {
+    // error?
+  }
+  tsl2.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
+  tsl2.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
 
   preassure.setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
   preassure.setOversampleRate(7); // Set Oversample to the recommended 128
