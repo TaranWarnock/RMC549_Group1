@@ -58,7 +58,7 @@ void GPSSensorThread::readFromSensor() {
             return;
         }
 
-        timeCheck = 8000;
+        timeCheck = 3000;
         NMEA1.trim();
         NMEA1.replace("\n","");
         NMEA1.replace("\r","");

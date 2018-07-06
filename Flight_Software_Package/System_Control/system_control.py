@@ -77,6 +77,42 @@ class SystemControl(FlightSoftwareParent):
             self.board_ID = None
         self.end_function_diagnostics("check_id_and_headers")
 
+    def check_uplink_commands(self) -> list:
+        """
+        This function checks for any un-processed uplink commands relevant to system control
+
+        Written by Daniel Letros, 2018-07-06
+
+        :return: Returns a list of the commands that need to be processed by this class
+        """
+        # Loop through list of uplink commands and check if any of them are useful to this class.
+        # If they are delete them from main uplink list before use and then carry out the commands.
+        # if no commands are left in main uplink list then set valid flag to false.
+        # It is done this way to minimize time with mutex lock.
+        self.start_function_diagnostics("check_uplink_commands")
+        with self.serial_object.uplink_commands_mutex:
+            commands_to_remove_and_use = []
+            for command in self.serial_object.last_uplink_commands:
+                if command.lower() == 'cut the mofo' or command.lower() == 'send header':
+                    commands_to_remove_and_use.append(command)
+            for command in commands_to_remove_and_use:
+                self.serial_object.last_uplink_commands.remove(command)
+            self.serial_object.last_uplink_seen_by_system_control = True
+            self.end_function_diagnostics("check_uplink_commands")
+
+        return commands_to_remove_and_use
+
+    def check_auto_cutoff_conditions(self) -> bool:
+        """
+        This function will check for the automatic payload cutoff conditions.
+
+
+        :return:
+        """
+        self.start_function_diagnostics("check_auto_cutoff_conditions")
+        self.end_function_diagnostics("check_auto_cutoff_conditions")
+        return False
+
     def run(self) -> None:
         """
         This function is the main loop of the system control for the RMC 549 balloon(s).
@@ -91,30 +127,19 @@ class SystemControl(FlightSoftwareParent):
         while self.should_thread_run:
             try:
                 self.check_id_and_headers()
-                # log_line = self.read_last_line_in_data_log() # TODO conditional payload cutting
-                if self.serial_object.last_uplink_commands_valid:
-                    # Loop through list of uplink commands and check if any of them are useful to this class.
-                    # If they are delete them from main uplink list before use and then carry out the commands.
-                    # if no commands are left in main uplink list then set valid flag to false.
-                    # It is done this way to minimize time with mutex lock.
-                    self.start_function_diagnostics("SystemControl_Run()_Uplink_Get")
-                    with self.serial_object.uplink_commands_mutex:
-                        commands_to_remove_and_use = []
-                        for command in self.serial_object.last_uplink_commands:
-                            if command.lower() == 'cut the mofo' or command.lower() == 'send header':
-                                commands_to_remove_and_use.append(command)
-                        for command in commands_to_remove_and_use:
-                            self.serial_object.last_uplink_commands.remove(command)
-                        self.serial_object.last_uplink_seen_by_system_control = True
-                        self.end_function_diagnostics("SystemControl_Run()_Uplink_Get")
 
+                # Check for any uplink commands
+                if self.serial_object.last_uplink_commands_valid:
+                    commands_to_remove_and_use = self.check_uplink_commands()
                     for command in commands_to_remove_and_use:
                         if command.lower() == 'cut the mofo':
-                            print("CUTTING PAYLOAD")
-                            # GPIO.output(self.cutoff_pin_bcm, not GPIO.input(self.cutoff_pin_bcm))
-                            GPIO.output(self.cutoff_pin_bcm, GPIO.HIGH)
-                            time.sleep(self.cutoff_time_high)
-                            GPIO.output(self.cutoff_pin_bcm, GPIO.LOW)
+                            try:
+                                self.log_info("Cutting payload form uplink command.")
+                                GPIO.output(self.cutoff_pin_bcm, GPIO.HIGH)
+                                time.sleep(self.cutoff_time_high)
+                                GPIO.output(self.cutoff_pin_bcm, GPIO.LOW)
+                            except Exception as err:
+                                self.log_error("Could not cut payload with reported error [%s]" % str(err))
 
                         if command.lower() == 'send header':
                             if self.serial_object.ports_are_good:
@@ -126,6 +151,11 @@ class SystemControl(FlightSoftwareParent):
                                         time.sleep(self.buffering_delay)
                                         self.serial_object.read_request_buffer.append([port, "TX"])
                                         time.sleep(self.buffering_delay)
+
+                # Check for other automatic cutoff conditions based off of data line
+                if self.data_header is not None:
+                    last_data_line = self.read_last_line_in_data_log()
+
 
             except:
                 pass

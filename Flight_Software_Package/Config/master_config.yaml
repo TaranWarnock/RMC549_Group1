@@ -12,7 +12,7 @@ logger:
 serial_communication:
     main_delay:                   0.05                                     # Delay [sec] for the run() function of thread
     default_baud_rate:            115200                                   # Buadrate of serial communication
-    default_timeout:              3                                        # Timeout [sec] of serial communication
+    default_timeout:              8                                        # Timeout [sec] of serial communication
 
 system_control:
     main_delay:                   3                                        # Delay [sec] for the run() function of thread
@@ -34,6 +34,7 @@ telemetry:
     main_delay:                   0.5                                      # Delay [sec] for the run() function of thread
     buffering_delay:              0                                        # Delay [sec] for different commanding operations
     data_downlink_delay:          9                                        # Delay [sec] for sending down data through telemetry
+    enable_telemetry:             True                                     # Turns Pi side of telemetry on/off
 
 command_and_control:
     buffering_delay:              0                                        # Delay [sec] for different commanding operations

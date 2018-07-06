@@ -130,11 +130,16 @@ class SerialCommunication(FlightSoftwareParent):
             new_data = self.port_list[port].readline().decode('utf-8').strip()
             new_data = new_data.replace("\n", "")
             new_data = new_data.replace("\r", "")
-            if new_data is "" and type is not "RX":
-                self.log_error("[%s] returned no data." % port)
+            if new_data == "" and type != "RX":
+                self.log_error("[%s] returned no data. Attempting reconnect." % port)
+                time.sleep(self.default_timeout)
+                self.ports_are_good          = False
+                self.read_request_buffer     = []
+                self.write_request_buffer    = []
+                self.expect_read_after_write = False
                 self.port_list[port].reset_input_buffer()
                 return
-            elif type is "DATA":
+            elif type == "DATA":
 
                 # Try to rapid get sensor data. Should be multithreaded for
                 # max time resolution but this has to be quick and dirty right now.
@@ -154,9 +159,9 @@ class SerialCommunication(FlightSoftwareParent):
                     new_data = new_data[0:-1]
 
                 self.log_data(new_data)
-            elif type is "ID":
+            elif type == "ID":
                 self.log_id(new_data)
-            elif type is "HEADER":
+            elif type == "HEADER":
 
                 # Append Pi photo sensor data if valid
                 for sensor in self.list_of_photosensors:
@@ -171,18 +176,17 @@ class SerialCommunication(FlightSoftwareParent):
                         new_data = new_data[0:-1]
 
                 self.log_header(new_data)
-            elif type is "TX":
+            elif type == "TX":
                 self.log_tx_event(new_data)
-            elif type is "RX" and new_data is not "":
+            elif type == "RX" and new_data != "":
                 self.log_rx_event(new_data)
                 # Assume uplink commands will be a comma delimited list joined in one string
                 with self.uplink_commands_mutex:
                     self.last_uplink_commands               = new_data.split(',')
                     self.last_uplink_commands_valid         = True
                     self.last_uplink_seen_by_system_control = False
-            if new_data is not "":
+            if new_data != "":
                 self.log_info("received [%s] information over [%s]" % (type, port))
-
 
         except Exception as err:
             self.log_error(str(err))
