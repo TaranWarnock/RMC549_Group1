@@ -107,6 +107,22 @@ class SystemControl(FlightSoftwareParent):
 
         return commands_to_remove_and_use
 
+    def convert_NEMA_to_deci(self, nmea: str) -> float:
+        """
+        Converts GPS degrees/minutes/seconds to decimal degrees.
+
+        Written by Daniel Letros, 2018-07-06
+
+        :param dms: DMS value
+        :return: Decimal value
+        """
+        self.start_function_diagnostics("convert_dms_to_dd")
+        day  = int(float(nmea)/100)
+        rest = (float(nmea) - (day*100))/60
+        dec  = day + rest
+        self.end_function_diagnostics("convert_dms_to_dd")
+        return dec
+
     def check_auto_cutoff_conditions(self) -> bool:
         """
         This function will check for the automatic payload cutoff conditions.
@@ -134,7 +150,6 @@ class SystemControl(FlightSoftwareParent):
                     if header == "UTC":
                         # Check GPS Timestamp
                         try:
-                            # Example GPS timestamp: 230648.00
                             gps_HHMMSS = str(last_data_line[col_count])
                             # reformat into datetime
                             temp_time = datetime.datetime.utcnow().strftime("%Y%m%d_")
@@ -148,8 +163,7 @@ class SystemControl(FlightSoftwareParent):
                             self.log_error("Error checking for GPS timestamp payload cutoff")
                     elif header == "LtDgMn":
                         try:
-                            min_sec_deg = float(last_data_line[col_count])
-                            deci_deg    = int(min_sec_deg / 100) + (min_sec_deg - int(min_sec_deg/100) * 100)
+                            deci_deg    = self.convert_NEMA_to_deci(str(last_data_line[col_count]))
                             if deci_deg >= np.max(self.cutoff_conditions['gps_lat']) or \
                                     deci_deg <= np.min(self.cutoff_conditions['gps_lat']):
                                 should_cut = True
@@ -158,8 +172,7 @@ class SystemControl(FlightSoftwareParent):
                             self.log_error("Error checking for GPS latitude payload cutoff")
                     elif header == "LnDgMn":
                         try:
-                            min_sec_deg = float(last_data_line[col_count])
-                            deci_deg    = int(min_sec_deg / 100) + (min_sec_deg - int(min_sec_deg/100) * 100)
+                            deci_deg = self.convert_NEMA_to_deci(str(last_data_line[col_count]))
                             if deci_deg >= np.max(self.cutoff_conditions['gps_lon']) or \
                                     deci_deg <= np.min(self.cutoff_conditions['gps_lon']):
                                 should_cut = True

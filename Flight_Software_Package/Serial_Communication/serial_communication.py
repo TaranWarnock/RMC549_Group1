@@ -171,7 +171,7 @@ class SerialCommunication(FlightSoftwareParent):
                     # remove ',' at end if needed
                     if new_data[-1] == ",":
                         new_data = new_data[0:-1]
-
+                new_data = "PiTS," + new_data
                 self.log_header(new_data)
             elif type == "TX":
                 self.log_tx_event(new_data)
