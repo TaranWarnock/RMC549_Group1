@@ -49,7 +49,7 @@ class GPSSensorThread : public SensorThread {
         void readFromSensor() override;
 
     public:
-        GPSSensorThread() : SensorThread("GPS", "UTC,LtDgMn,LnDgMn,Nsat,Alt,Altu") {}
+        GPSSensorThread() : SensorThread("GPS", "UTC,LtDgMn,NS,LnDgMn,EW,Nsat,Alt,Altu") {}
 };
 
 class IMUSensorThread : public SensorThread {

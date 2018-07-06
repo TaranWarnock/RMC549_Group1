@@ -99,7 +99,7 @@ void GPSSensorThread::readFromSensor() {
 
         while(newIndx > 0){
             valueCounter++;
-            if (valueCounter == 2 || valueCounter == 3 || valueCounter == 5 || valueCounter == 8 || valueCounter == 10 || valueCounter == 11)
+            if (valueCounter == 2 || valueCounter == 3 || valueCounter == 4 || valueCounter == 5 || valueCounter == 6 || valueCounter == 8 || valueCounter == 10 || valueCounter == 11)
                 sensorData.concat(GPGGA.substring(oldIndx + 1, newIndx + 1));
 
             oldIndx = newIndx;
