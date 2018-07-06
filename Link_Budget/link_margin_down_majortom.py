@@ -8,6 +8,12 @@ PH 549 Major Tom Link Margin
 -------------------------------------------------------------------------------
 Calculations of link margin for LoRa.
 ===============================================================================
+Reference: https://electronics.stackexchange.com/questions/277722/how-to-calculate-the-data-rate-of-lora
+    How to determine the data rate for the LoRa module. The defaults in the
+    initialization of the sensor are:
+        - bandwidth, Bw = 125 kHz
+        - coding rate, Cr = 4/5
+        - spreading factor, Sf = 128 chips/symbol
 """
 
 import numpy as np
