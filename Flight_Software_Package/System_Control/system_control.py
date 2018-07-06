@@ -142,7 +142,7 @@ class SystemControl(FlightSoftwareParent):
                 self.log_error("Error checking for Pi timestamp payload cutoff")
 
             # Check GPS if Pi time says don't do it yet
-            if self.data_header is not None and not should_cut:
+            if self.data_header is not None and not should_cut and self.serial_object.ports_are_good:
                 last_data_line = self.read_last_line_in_data_log().split(',')
                 header_list    = self.data_header.split(',')
                 col_count = 0
