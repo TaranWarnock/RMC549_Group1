@@ -18,7 +18,7 @@ if __name__ == '__main__':
     transmit_power_W = 0.350
     transmit_power_dB = 10.0 * np.log10(transmit_power_W)
     line_loss_dB = 1.0
-    transmit_gain_dB = 10 * np.log10(2 * 1.64)  # typical monopole gain -- 2x dipole gain
+    transmit_gain_dB = 10 * np.log10(1.64)  # typical dipole gain
     effective_isotropic_radiated_power_dB = transmit_power_dB + transmit_gain_dB - line_loss_dB
 
     # Step 2: Determine the space loss, L_s, due to propagation of the signal through space
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     space_loss_dB = 10.0 * np.log10(space_loss)
 
     # Step 3: Determine Values
-    receiver_gain_dB = 10 * np.log10(2 * 1.64)  # typical dipole gain -- not sure what ground antenna is yet
+    receiver_gain_dB = 10 * np.log10(2 * 1.64)  # typical monopole gain -- not sure what ground antenna is yet
     receiver_system_noise_K = 600.0     # using typical value from PH 547 assignment
     system_noise_dB = 10.0 * np.log10(receiver_system_noise_K)
     data_rate_bps = 1200.0
