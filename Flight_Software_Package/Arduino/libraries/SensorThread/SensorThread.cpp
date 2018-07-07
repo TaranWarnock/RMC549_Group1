@@ -120,8 +120,13 @@ void IMUSensorThread::readFromSensor() {
 //    sensorData.concat(":");
     if (id != 0xA0)
         IMUactive = false;
-    else
+    else if (!IMUactive)
         IMUactive = true;
+    else if (IMUactive){
+        // Paste reinitialisation code here
+        IMUactive = true;
+    }
+
 
 
     // Put IMU data acquisition code here and save result in sensorData
@@ -147,14 +152,14 @@ void IMUSensorThread::readFromSensor() {
         sensorData.concat(",");
     }
     else{
-        sensorData = "!NO_IMU!_";
+        sensorData.concat("!NO_IMU!_");
     }
 
     id =  IMUSensorThread::read8bit(0x60, 0x00);
     sensorData.concat("!!");
     sensorData.concat(id);
     sensorData.concat("::");
-    if (id != 0x0E)
+    if (id != 0x0C)
         pressureActive = false;
     else
         IMUactive = true;
@@ -165,7 +170,7 @@ void IMUSensorThread::readFromSensor() {
         sensorData.concat(preassurePtr->readTemp());
     }
     else {
-        sensorData = "!NO_PRESSURE!_";
+        sensorData.concat("!NO_PRESSURE!_");
     }
 }
 
