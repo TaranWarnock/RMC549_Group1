@@ -115,19 +115,15 @@ void IMUSensorThread::readFromSensor() {
     // address of IMU may also be 0x07
     uint8_t id =  IMUSensorThread::read8bit(0x28, 0x00);
     sensorData = "";
-//    sensorData.concat("!");
-//    sensorData.concat((uint8_t)id);
-//    sensorData.concat(":");
-    if (id != 0xA0)
-        IMUactive = false;
-    else if (!IMUactive)
+
+    if (Wire.requestFrom(0x28, 1, true) && IMUactive)
         IMUactive = true;
-    else if (IMUactive){
-        // Paste reinitialisation code here
+    else if (Wire.requestFrom(0x28, 1, true) && !IMUactive){
+        // Reinitialise IMU here
         IMUactive = true;
     }
-
-
+    else if (!Wire.requestFrom(0x28, 1, true))
+        IMUactive = false;
 
     // Put IMU data acquisition code here and save result in sensorData
     if (IMUactive){
@@ -156,41 +152,24 @@ void IMUSensorThread::readFromSensor() {
     }
 
 
-//    id =  IMUSensorThread::read8bit(0x60, 0x00);
-//    sensorData.concat("!!");
-//    sensorData.concat((uint8_t)id);
-//    sensorData.concat("::");
-    sensorData = "";
-
-    Wire.beginTransmission(0x28);
-    byte error = Wire.endTransmission();
-    if (error == 0)
-        sensorData.concat("____IMUFound_____");
-    else if (error == 4)
-        sensorData.concat("____NoIMU_____");
-
-    Wire.beginTransmission(0x60);
-    error = Wire.endTransmission();
-    if (error == 0)
-        sensorData.concat("____PressureFound_____");
-    else if (error == 4)
-        sensorData.concat("____NoPressure_____");
+    if (Wire.requestFrom(0x60, 1, true) && pressureActive)
+        IMUactive = true;
+    else if (Wire.requestFrom(0x60, 1, true) && !pressureActive){
+        // Reinitialise IMU here
+        pressureActive = true;
+    }
+    else if (!Wire.requestFrom(0x60, 1, true))
+        pressureActive = false;
 
 
-
-//    if (id != 0x0E)
-//        pressureActive = false;
-//    else
-//        IMUactive = true;
-
-//    if (pressureActive){
-//        sensorData.concat(preassurePtr->readPressure());
-//        sensorData.concat(",");
-//        sensorData.concat(preassurePtr->readTemp());
-//    }
-//    else {
-//        sensorData.concat("!NO_PRESSURE!_");
-//    }
+    if (pressureActive){
+        sensorData.concat(preassurePtr->readPressure());
+        sensorData.concat(",");
+        sensorData.concat(preassurePtr->readTemp());
+    }
+    else {
+        sensorData.concat("!NO_PRESSURE!_");
+    }
 }
 
 
