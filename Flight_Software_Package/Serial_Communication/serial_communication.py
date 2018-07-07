@@ -103,10 +103,11 @@ class SerialCommunication(FlightSoftwareParent):
                 pass
 
         # Open ports
-        try:
-            result.remove('/dev/ttyAMA0')  # AMA0 seems to be always "active" as is the Pi's PL011, ignore.
-        except:
-            self.log_error("Could not remove [/dev/ttyAMA0] from port list.")
+        if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+            try:
+                result.remove('/dev/ttyAMA0')  # AMA0 seems to be always "active" as is the Pi's PL011, ignore.
+            except:
+                self.log_error("Could not remove [/dev/ttyAMA0] from port list.")
         for port in result:
             self.port_list[port] = serial.Serial(port=port, baudrate=baudrate,
                                parity=serial.PARITY_NONE,
