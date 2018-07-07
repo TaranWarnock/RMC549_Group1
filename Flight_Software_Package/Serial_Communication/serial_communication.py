@@ -20,6 +20,7 @@ class SerialCommunication(FlightSoftwareParent):
         self.default_timeout   = 8
         self.main_delay        = 0.5
         self.reconnection_wait = 5
+        self.arduino_reset_pin = 23
         super().__init__("SerialCommunication", logging_object)
 
         self.port_list        = dict()
@@ -38,6 +39,15 @@ class SerialCommunication(FlightSoftwareParent):
         self.read_request_buffer  = []  # buffer of ports to read from, [port, message_type], ...]
         self.write_request_buffer = []  # buffer of ports to write to, [[port, message], ...]
 
+        try:
+            # Configure the cutoff pin
+            if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+                GPIO.setwarnings(False)
+                GPIO.setmode(GPIO.BCM)
+                GPIO.setup(self.arduino_reset_pin, GPIO.OUT, initial=GPIO.LOW)
+        except:
+            self.log_error("Could not configure BCM pin [%s]"% self.arduino_reset_pin)
+
     def load_yaml_settings(self)->None:
         """
         This function loads in settings from the master_config.yaml file.
@@ -54,6 +64,7 @@ class SerialCommunication(FlightSoftwareParent):
         self.default_timeout   = content['default_timeout']
         self.reconnection_wait = content['reconnection_wait']
         self.main_delay        = content['main_delay']
+        self.arduino_reset_pin = content['arduino_reset_pin']
 
 
     def find_serial_ports(self, baudrate: int = None, timeout: float = None) -> None:
@@ -103,10 +114,11 @@ class SerialCommunication(FlightSoftwareParent):
                 pass
 
         # Open ports
-        try:
-            result.remove('/dev/ttyAMA0')  # AMA0 seems to be always "active" as is the Pi's PL011, ignore.
-        except:
-            self.log_error("Could not remove [/dev/ttyAMA0] from port list.")
+        if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+            try:
+                result.remove('/dev/ttyAMA0')  # AMA0 seems to be always "active" as is the Pi's PL011, ignore.
+            except:
+                self.log_error("Could not remove [/dev/ttyAMA0] from port list.")
         for port in result:
             self.port_list[port] = serial.Serial(port=port, baudrate=baudrate,
                                parity=serial.PARITY_NONE,
@@ -271,6 +283,10 @@ class SerialCommunication(FlightSoftwareParent):
         """
         self.start_function_diagnostics("reset_serial_connection")
         time.sleep(self.reconnection_wait)
+        if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+            GPIO.output(self.arduino_reset_pin, GPIO.LOW)
+            time.sleep(self.reconnection_wait/2)
+            GPIO.output(self.arduino_reset_pin, GPIO.HIGH)
         self.ports_are_good          = False
         self.read_request_buffer     = []
         self.write_request_buffer    = []
@@ -294,5 +310,6 @@ class SerialCommunication(FlightSoftwareParent):
                     self.expect_read_after_write = True
             except Exception as err:
                 self.log_error("Main function error [%s]" % str(err))
+                # self.reset_serial_connection()
             time.sleep(self.main_delay)
         print("%s << %s << Exiting Thread" % (self.system_name, self.class_name))
