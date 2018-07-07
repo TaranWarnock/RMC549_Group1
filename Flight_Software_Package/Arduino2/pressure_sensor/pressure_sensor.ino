@@ -12,16 +12,9 @@ unsigned long sampleTime = 1000;
 File myFile;
 
 void setup() {
-  // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-//  while (!Serial) {
-//    ; // wait for serial port to connect. Needed for native USB port only
-//  }
-  if (!SD.begin(4)) {
-    Serial.println("initialization failed!");
-    while (1);
+  while (!SD.begin(4)) {
+    delay(1000);
   }
-  Serial.println("Init Success");
   // pressure sensor init
   preSensor.begin();
   preSensor.setModeBarometer();   // Measure pressure in Pascals from 20 to 110 kPa
@@ -44,13 +37,8 @@ void loop() {
   // save to SD card
   myFile = SD.open("PrDa.txt", FILE_WRITE);
   if (myFile) {
-    Serial.print("Writing to test.txt...");
     myFile.println(sensorData);
     myFile.close();
-    Serial.println("done.");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening PressureData.txt");
-  }
-   delay(sampleTime);
+  } 
+  delay(sampleTime);
 }
