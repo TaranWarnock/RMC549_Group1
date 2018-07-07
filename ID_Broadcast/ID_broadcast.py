@@ -36,12 +36,14 @@ def get_newest_notification_file(path):
     return latest_file
 
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
 path_to_log_files = r'../Flight_Software_Package/logs'
 
 while True:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+
     last_data = read_last_line_in_data_log(get_newest_data_file(path_to_log_files))
     last_note = read_last_line_in_data_log(get_newest_notification_file(path_to_log_files))
 
@@ -55,3 +57,5 @@ while True:
     sock.sendto(bytes(message, 'utf-8'), ('<broadcast>', 55555))
     time.sleep(0.3)
 
+    sock.close()
+    time.sleep(0.2)
