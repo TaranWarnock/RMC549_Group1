@@ -39,9 +39,9 @@ if __name__ == "__main__":
     System_Control_Thread.start()
     Command_And_Control_Thread.start()
 
-    while True:
+    # while True:
         # Live forever for now
-        time.sleep(10000)
+    time.sleep(10)
 
     # End Threads
     Command_And_Control_Thread.should_thread_run  = False
