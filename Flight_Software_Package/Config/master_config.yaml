@@ -22,13 +22,13 @@ system_control:
     cutoff_BCM_pin_number:        18                                       # The pin number in BCM layout of the cutoff relay
     cut_conditions:                                                        # Conditions which if met or exceeded will cut the payload
         gps_lat:                                                           # GPS Latitude [deg] limits for payload cutoff
-            -                     1
-            -                     2
+            -                     44.226650
+            -                     44.235380
         gps_lon:                                                           # GPS Longitude [deg] limits for payload cutoff
-            -                     3
-            -                     4
+            -                     -76.455131
+            -                     -76.471524
         gps_altitude:                                                      # Altitude [km] limit for payload cutoff
-            -                     12345
+            -                     25
         time:                                                              # UTC which will trigger cutoff. Assumes same day.
             -                     "22:22"
 telemetry:
