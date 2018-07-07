@@ -10,7 +10,7 @@
 class SensorThread : public Thread {
     protected:
         String sensorName;
-                String sensorHeader;
+        String sensorHeader;
         String sensorData;
 
         // Function for a single sensor reading event here
@@ -21,12 +21,12 @@ class SensorThread : public Thread {
         SensorThread() : Thread() {}
         SensorThread(String name, String header) : Thread() {
             sensorName   = name;
-                        sensorHeader = header;
+            sensorHeader = header;
         }
 
         void run() override;
 
-                String getSensorHeader() {
+        String getSensorHeader() {
             return sensorHeader;
         }
 
@@ -61,9 +61,9 @@ class IMUSensorThread : public SensorThread {
         // Function for a single IMU reading
         void readFromSensor() override;
 
-                String getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title);
-                String displayCalStatus(void);
-                byte read8bit(byte address, byte ID);
+        String getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title);
+        String displayCalStatus(void);
+        byte read8bit(byte address, byte ID);
 
     public:
 //        typedef enum{
@@ -99,7 +99,7 @@ class GeigerSensorThread : public SensorThread {
         static volatile unsigned long m_eventTime[2];
 
     public:
-            GeigerSensorThread(int interruptPin1, int interruptPin2);
+        GeigerSensorThread(int interruptPin1, int interruptPin2);
 
 };
 
