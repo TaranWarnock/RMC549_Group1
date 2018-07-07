@@ -3,8 +3,6 @@ import time
 import glob
 import os
 
-time.sleep(20)
-
 """
 This script is run automatically on start up. It will broadcast the Pi's ID, IP, and log/notification files.
 """
@@ -37,7 +35,7 @@ def get_newest_notification_file(path):
 
 
 
-path_to_log_files = r'../Flight_Software_Package/logs'
+path_to_log_files = r'/home/pi/RMC549Repos/RMC549_Group1/Flight_Software_Package/logs'
 
 while True:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

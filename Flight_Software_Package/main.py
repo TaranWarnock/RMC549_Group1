@@ -13,10 +13,6 @@ if __name__ == "__main__":
     Writen by Daniel Letros, 2018-06-27
     """
 
-    if socket.gethostname() == "MajorTom" or socket.gethostbyname() == "Rocky":
-        # Delay for power on startup
-        time.sleep(15)
-
     # Instantiate I2C Photosensors connected to Pi
     photo_sensor_one   = I2C_Photosensor(0x39, "PiPto1")
     photo_sensor_two   = I2C_Photosensor(0x49, "PiPto2")
