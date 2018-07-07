@@ -14,6 +14,7 @@ serial_communication:
     default_baud_rate:            115200                                   # Buadrate of serial communication
     default_timeout:              8                                        # Timeout [sec] of serial communication
     reconnection_wait:            5                                        # Delay [sec] to wait before reset on com fail
+    arduino_reset_pin:            23                                       # BCM pin to reset arduino (if applicable)
 
 system_control:
     main_delay:                   3                                        # Delay [sec] for the run() function of thread

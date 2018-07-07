@@ -16,7 +16,6 @@ class CommandAndControl(FlightSoftwareParent):
                  system_control_object: SystemControl) -> None:
         self.buffering_delay              = 0.1
         self.que_data_delay               = 5
-        self.telemetry_num_data_intervals = 3
         super().__init__("CommandAndControl", logging_object)
         self.serial_object         = serial_object
         self.system_control_object = system_control_object

@@ -82,12 +82,12 @@ while True:
     # last_note = read_last_line_in_data_log(get_newest_notification_file(path_to_log_files))
 
     try:
-        note_message = "%s<<%s" % (socket.gethostname(), read_last_line_in_data_log(new_log_list[0][1]))
+        note_message = "%s << %s" % (socket.gethostname(), read_last_line_in_data_log(new_log_list[0][1]))
 
         sock.sendto(bytes(note_message, 'utf-8'), ('<broadcast>', 55555))
         time.sleep(0.3)
 
-        data_message = "%s<<%s" % (socket.gethostname(), read_last_line_in_data_log(new_log_list[1][1]))
+        data_message = "%s << %s" % (socket.gethostname(), read_last_line_in_data_log(new_log_list[1][1]))
 
         sock.sendto(bytes(data_message, 'utf-8'), ('<broadcast>', 55555))
         time.sleep(0.3)
