@@ -120,6 +120,7 @@ void IMUSensorThread::readFromSensor() {
         IMUactive = true;
     else if (Wire.requestFrom(0x28, 1, true) && !IMUactive){
         // Reinitialise IMU here
+        *bnoPtr = Adafruit_BNO055(55);
         IMUactive = bnoPtr->begin();
     }
     else if (!Wire.requestFrom(0x28, 1, true))
@@ -156,9 +157,9 @@ void IMUSensorThread::readFromSensor() {
         IMUactive = true;
     else if (Wire.requestFrom(0x60, 1, true) && !pressureActive){
         // Reinitialise pressure sensor here
-        preassure.setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
-  		preassure.setOversampleRate(7); // Set Oversample to the recommended 128
-  		preassure.enableEventFlags(); // Enable all three pressure and temp event flags 
+        preassurePtr->setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
+  		preassurePtr->setOversampleRate(7); // Set Oversample to the recommended 128
+  		preassurePtr->enableEventFlags(); // Enable all three pressure and temp event flags 
 
 		pressureActive = true;
     }
