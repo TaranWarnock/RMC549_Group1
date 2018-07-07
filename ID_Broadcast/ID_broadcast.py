@@ -2,7 +2,11 @@ import socket
 import time
 import glob
 import os
-
+import os
+import stat
+import datetime as dt
+import argparse
+from pprint import pprint
 """
 This script is run automatically on start up. It will broadcast the Pi's ID, IP, and log/notification files.
 """
@@ -23,9 +27,45 @@ def read_last_line_in_data_log(path) -> str:
 
 
 def get_newest_data_file(path):
-    list_of_files = glob.glob(path + os.sep + '*_data.txt')  # * means all if need specific format then *.csv
-    latest_file = max(list_of_files, key=os.path.getctime)
-    return latest_file
+
+    """
+    gets a list of files sorted by modified time
+
+    keyword args:
+    num_files -- the n number of files you want to print
+    directory -- the starting root directory of the search
+
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n',
+                        '--number',
+                        help='number of items to return',
+                        type=int,
+                        default=1)
+    parser.add_argument('-d',
+                        '--directory',
+                        help='specify a directory to search in',
+                        default='/home/pi/RMC549Repos/RMC549_Group1/Flight_Software_Package/logs')
+
+    args = parser.parse_args()
+    num_files, directory = args.number, args.directory
+
+    modified = []
+    rootdir = os.path.join(os.getcwd(), directory)
+
+    for root, sub_folders, files in os.walk(rootdir):
+        for file in files:
+            try:
+                unix_modified_time = os.stat(os.path.join(root, file))[stat.ST_MTIME]
+                human_modified_time = dt.datetime.fromtimestamp(unix_modified_time).strftime('%Y-%m-%d %H:%M:%S')
+                filename = os.path.join(root, file)
+                if ".txt" == filename[-4:]:
+                    modified.append((human_modified_time, filename))
+            except:
+                pass
+
+    modified.sort(key=lambda a: a[0], reverse=True)
+    pprint(modified[:num_files])
 
 
 def get_newest_notification_file(path):
