@@ -120,7 +120,7 @@ void IMUSensorThread::readFromSensor() {
         IMUactive = true;
     else if (Wire.requestFrom(0x28, 1, true) && !IMUactive){
         // Reinitialise IMU here
-        IMUactive = true;
+        IMUactive = bnoPtr->begin();
     }
     else if (!Wire.requestFrom(0x28, 1, true))
         IMUactive = false;
@@ -148,15 +148,19 @@ void IMUSensorThread::readFromSensor() {
         sensorData.concat(",");
     }
     else{
-        sensorData.concat("!NO_IMU!_");
+        sensorData.concat(",,,,,,,,,,,,,,,,,,,,,,,,,,");
     }
 
 
     if (Wire.requestFrom(0x60, 1, true) && pressureActive)
         IMUactive = true;
     else if (Wire.requestFrom(0x60, 1, true) && !pressureActive){
-        // Reinitialise IMU here
-        pressureActive = true;
+        // Reinitialise pressure sensor here
+        preassure.setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
+  		preassure.setOversampleRate(7); // Set Oversample to the recommended 128
+  		preassure.enableEventFlags(); // Enable all three pressure and temp event flags 
+
+		pressureActive = true;
     }
     else if (!Wire.requestFrom(0x60, 1, true))
         pressureActive = false;
@@ -168,7 +172,7 @@ void IMUSensorThread::readFromSensor() {
         sensorData.concat(preassurePtr->readTemp());
     }
     else {
-        sensorData.concat("!NO_PRESSURE!_");
+        sensorData.concat(",");
     }
 }
 
