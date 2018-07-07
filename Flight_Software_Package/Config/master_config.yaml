@@ -3,7 +3,7 @@ general:
 
 logger:
     main_delay:                   0.05                                     # Delay [sec] for the run() function of thread
-    log_file_path_Linux:          logs/                                    # Where to save logging files on Linux system
+    log_file_path_Linux:          /home/pi/RMC549Repos/RMC549_Group1/Flight_Software_Package/logs/ # Where to save logging files on Linux system
     log_file_path_Windows:        C:\Users\Daniel_2\Desktop\Test_log_files # Where to save logging files on Windows (lab)
     log_file_path_mac:            /Users/taran/Test_log_files              # Where to save logging files on Mac (lab)
     run_logger_diagnostics:       False                                    # Runs diagnostics on logging functions
