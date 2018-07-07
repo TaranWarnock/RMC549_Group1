@@ -3,7 +3,7 @@ import time
 import glob
 import os
 
-time.sleep(15)
+time.sleep(20)
 
 """
 This script is run automatically on start up. It will broadcast the Pi's ID, IP, and log/notification files.
