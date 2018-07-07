@@ -1,11 +1,3 @@
-// Arduino9x_RX
-// -*- mode: C++ -*-
-// Example sketch showing how to create a simple messaging client (receiver)
-// with the RH_RF95 class. RH_RF95 class does not provide for addressing or
-// reliability, so you should only use RH_RF95 if you do not need the higher
-// level messaging abilities.
-// It is designed to work with the other example Arduino9x_TX
-
 #include <SPI.h>
 #include <RH_RF95.h>
 
@@ -31,8 +23,6 @@ void setup() {
   Serial.begin(9600);
   delay(100);
 
-  Serial.println("Arduino LoRa RX Test!");
-  
   // manual reset
   digitalWrite(RFM95_RST, LOW);
   delay(10);
@@ -43,17 +33,14 @@ void setup() {
     Serial.println("LoRa radio init failed");
     while (1);
   }
-  Serial.println("LoRa radio init OK!");
 
   // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
   if (!rf95.setFrequency(RF95_FREQ)) {
     Serial.println("setFrequency failed");
     while (1);
   }
-  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
 
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
-
   // The default transmitter power is 13dBm, using PA_BOOST.
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
   // you can set transmitter powers from 5 to 23 dBm:
@@ -61,6 +48,7 @@ void setup() {
 }
 
 void loop(){
+  // check if message from the LoRa is available
   if (rf95.available()){
     // Should be a message for us now   
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -69,17 +57,19 @@ void loop(){
     if (rf95.recv(buf, &len)){
       digitalWrite(LED, HIGH);
       //RH_RF95::printBuffer("Received: ", buf, len);
-      delay(5);
-      //Serial.print("Got: ");
+      delay(10); // this line is concerting, the commented line above is better because it ensures the buf is available before use
+      // print the comma separated return file
       Serial.print((char*)buf);
       Serial.print(",");
-      //Serial.print("RSSI:");
+      // print the RSSI
       Serial.println(rf95.lastRssi(), DEC);
     }
     else{
       Serial.println("Receive failed");
     }
   }
+
+  // check if there is a command available to be uplinked
   if (Serial.available() > 0){
   String data = "";
   while (Serial.available()>0){
