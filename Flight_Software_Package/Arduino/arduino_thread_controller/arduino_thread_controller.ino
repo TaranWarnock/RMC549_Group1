@@ -107,11 +107,9 @@ void setup() {
 
   // add each thread to the controller
   controller.add(gps_thread);
-  if (doIMU)
-    controller.add(imu_thread);
+  controller.add(imu_thread);
   controller.add(geiger_thread);
-  if (doPhoto)
-    controller.add(photo_thread);
+  controller.add(photo_thread);
 }
 
 void loop() {
