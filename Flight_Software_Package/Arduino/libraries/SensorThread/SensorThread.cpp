@@ -155,23 +155,42 @@ void IMUSensorThread::readFromSensor() {
         sensorData.concat("!NO_IMU!_");
     }
 
-    id =  IMUSensorThread::read8bit(0x60, 0x00);
-    sensorData.concat("!!");
-    sensorData.concat(id);
-    sensorData.concat("::");
-    if (id != 0x0C)
-        pressureActive = false;
-    else
-        IMUactive = true;
 
-    if (pressureActive){
-        sensorData.concat(preassurePtr->readPressure());
-        sensorData.concat(",");
-        sensorData.concat(preassurePtr->readTemp());
-    }
-    else {
-        sensorData.concat("!NO_PRESSURE!_");
-    }
+//    id =  IMUSensorThread::read8bit(0x60, 0x00);
+//    sensorData.concat("!!");
+//    sensorData.concat((uint8_t)id);
+//    sensorData.concat("::");
+    sensorData = "";
+
+    Wire.beginTransmission(0x28);
+    byte error = Wire.endTransmission();
+    if (error == 0)
+        sensorData.concat("____IMUFound_____");
+    else if (error == 4)
+        sensorData.concat("____NoIMU_____");
+
+    Wire.beginTransmission(0x60);
+    error = Wire.endTransmission();
+    if (error == 0)
+        sensorData.concat("____PressureFound_____");
+    else if (error == 4)
+        sensorData.concat("____NoPressure_____");
+
+
+
+//    if (id != 0x0E)
+//        pressureActive = false;
+//    else
+//        IMUactive = true;
+
+//    if (pressureActive){
+//        sensorData.concat(preassurePtr->readPressure());
+//        sensorData.concat(",");
+//        sensorData.concat(preassurePtr->readTemp());
+//    }
+//    else {
+//        sensorData.concat("!NO_PRESSURE!_");
+//    }
 }
 
 
