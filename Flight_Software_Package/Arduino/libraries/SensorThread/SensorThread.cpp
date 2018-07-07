@@ -106,7 +106,7 @@ void GPSSensorThread::readFromSensor() {
             oldIndx = newIndx;
             newIndx = GPGGA.indexOf(",", oldIndx + 1);
         }
-        
+
         sensorData.remove(sensorData.length() - 1);
 
 }
@@ -158,10 +158,11 @@ void IMUSensorThread::readFromSensor() {
     else if (Wire.requestFrom(0x60, 1, true) && !pressureActive){
         // Reinitialise pressure sensor here
         preassurePtr->setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
-  		preassurePtr->setOversampleRate(7); // Set Oversample to the recommended 128
-  		preassurePtr->enableEventFlags(); // Enable all three pressure and temp event flags 
+        preassurePtr->setOversampleRate(7); // Set Oversample to the recommended 128
+        preassurePtr->enableEventFlags(); // Enable all three pressure and temp event flags
 
-		pressureActive = true;
+
+                pressureActive = true;
     }
     else if (!Wire.requestFrom(0x60, 1, true))
         pressureActive = false;
@@ -241,7 +242,7 @@ GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2) : S
     m_eventCount[1] = 0;
     m_eventCount[2] = 0;
     m_eventTime[0] = 0;
-    m_eventTime[1] = 0; 
+    m_eventTime[1] = 0;
 
     pinMode(m_interruptPin[0], INPUT);
     pinMode(m_interruptPin[1], INPUT);
@@ -296,22 +297,22 @@ PhotoSensorThread::PhotoSensorThread(TSL2561* tslPtr0, TSL2561* tslPtr1, TSL2561
 }
 
 void PhotoSensorThread::readFromSensor() {
-    
+
     uint32_t lum0, lum1, lum2;
     uint16_t ir0, ir1, ir2, full0, full1, full2;
 
     lum0 = m_tslPtr[0]->getFullLuminosity();
     ir0 = lum0 >> 16;
     full0 = lum0 & 0xFFFF;
-    
+
     lum1 = m_tslPtr[1]->getFullLuminosity();
     ir1 = lum1 >> 16;
     full1 = lum1 & 0xFFFF;
-    
+
     lum2 = m_tslPtr[2]->getFullLuminosity();
     ir2 = lum2 >> 16;
     full2 = lum2 & 0xFFFF;
-    
+
     sensorData = "";
     sensorData.concat(String(full0));
     sensorData.concat(",");
@@ -319,7 +320,7 @@ void PhotoSensorThread::readFromSensor() {
     sensorData.concat(",");
     sensorData.concat(String(full1));
     sensorData.concat(",");
-    sensorData.concat(String(ir1));    
+    sensorData.concat(String(ir1));
     sensorData.concat(",");
     sensorData.concat(String(full2));
     sensorData.concat(",");
