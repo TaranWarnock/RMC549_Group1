@@ -56,14 +56,22 @@ class IMUSensorThread : public SensorThread {
     private:
         Adafruit_BNO055* bnoPtr;    // pointer to sensor handler
         MPL3115A2* preassurePtr;    // pointer to preassure
+        bool IMUactive = true, pressureActive = true;
 
         // Function for a single IMU reading
         void readFromSensor() override;
 
                 String getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title);
                 String displayCalStatus(void);
+                byte read8bit(byte address, byte ID);
 
     public:
+//        typedef enum{
+//                    IMU_ADDRESS       =  0X07,
+//                    PRESSURE_ADDRESS  =  0x60,
+//                    CHIP_ID_ADDR      =  0x00
+//                }sensorAddress;
+
         IMUSensorThread(Adafruit_BNO055* bno, MPL3115A2* preassure) : SensorThread(
                 "IMU,Pr",
                 "Acxms2,Acyms2,Aczms2,"

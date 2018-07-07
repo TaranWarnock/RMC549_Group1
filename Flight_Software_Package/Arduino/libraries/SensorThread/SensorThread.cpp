@@ -1,4 +1,5 @@
 #include "SensorThread.h"
+#include <Wire.h>
 
 void SensorThread::run() {
     readFromSensor();
@@ -111,31 +112,86 @@ void GPSSensorThread::readFromSensor() {
 }
 
 void IMUSensorThread::readFromSensor() {
-    // Put IMU data acquisition code here and save result in sensorData
+    // address of IMU may also be 0x07
+    uint8_t id =  IMUSensorThread::read8bit(0x28, 0x00);
     sensorData = "";
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "A"));
-    sensorData.concat(",");
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gy"));
-    sensorData.concat(",");
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "M"));
-    sensorData.concat(",");
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_EULER, "E"));
-    sensorData.concat(",");
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "L"));
-    sensorData.concat(",");
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Gr"));
-    sensorData.concat(",");
+//    sensorData.concat("!");
+//    sensorData.concat((uint8_t)id);
+//    sensorData.concat(":");
+    if (id != 0xA0)
+        IMUactive = false;
+    else
+        IMUactive = true;
 
-    // get temperature and append to sensorData (accuracy of sensor is 1 degree)
-    int temp = bnoPtr->getTemp();
-    sensorData.concat(String(temp));
-    sensorData.concat(",");
-    sensorData.concat(displayCalStatus());
-    sensorData.concat(",");
-    sensorData.concat(preassurePtr->readPressure());
-    sensorData.concat(",");
-    sensorData.concat(preassurePtr->readTemp());
+
+    // Put IMU data acquisition code here and save result in sensorData
+    if (IMUactive){
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "A"));
+        sensorData.concat(",");
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gy"));
+        sensorData.concat(",");
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "M"));
+        sensorData.concat(",");
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_EULER, "E"));
+        sensorData.concat(",");
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "L"));
+        sensorData.concat(",");
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Gr"));
+        sensorData.concat(",");
+
+        // get temperature and append to sensorData (accuracy of sensor is 1 degree)
+        int temp = bnoPtr->getTemp();
+        sensorData.concat(String(temp));
+        sensorData.concat(",");
+        sensorData.concat(displayCalStatus());
+        sensorData.concat(",");
+    }
+    else{
+        sensorData = "!NO_IMU!_";
+    }
+
+    id =  IMUSensorThread::read8bit(0x60, 0x00);
+    sensorData.concat("!!");
+    sensorData.concat(id);
+    sensorData.concat("::");
+    if (id != 0x0E)
+        pressureActive = false;
+    else
+        IMUactive = true;
+
+    if (pressureActive){
+        sensorData.concat(preassurePtr->readPressure());
+        sensorData.concat(",");
+        sensorData.concat(preassurePtr->readTemp());
+    }
+    else {
+        sensorData = "!NO_PRESSURE!_";
+    }
 }
+
+
+byte IMUSensorThread::read8bit(byte address, byte ID){
+    byte value = 0;
+
+    Wire.beginTransmission(address);
+    #if ARDUINO >= 100
+        Wire.write((uint8_t)ID);
+    #else
+        Wire.send(ID);
+    #endif
+
+    Wire.endTransmission();
+    Wire.requestFrom(address, (byte)1);
+
+    #if ARDUINO >= 100
+        value = Wire.read();
+    #else
+        value = Wire.receive();
+    #endif
+
+    return value;
+}
+
 
 String IMUSensorThread::getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type,
                                String title) {
