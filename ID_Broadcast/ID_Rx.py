@@ -10,6 +10,6 @@ sock = socket.socket(socket.AF_INET,
 sock.bind((UDP_IP, UDP_PORT))
 
 while True:
-    data, addr = sock.recvfrom(2048)  # buffer size is 1024 bytes
+    data, addr = sock.recvfrom(32768)
     print(str(datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f")) + "::" + str(addr[0]) + "::" + str(UDP_PORT) + " << " + str(data.decode('utf-8')))
     time.sleep(0.1)

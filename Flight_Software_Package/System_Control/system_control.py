@@ -24,6 +24,8 @@ class SystemControl(FlightSoftwareParent):
         self.board_ID    = None
         self.data_header = None
 
+        self.has_already_cut_payload = False
+
         # Rewrite time cutoff condition as a datetime object
         temp_time = datetime.datetime.utcnow().strftime("%Y%m%d_")
         temp_time = temp_time + self.cutoff_conditions['time'][0].split(':')[0] + ":" + \
@@ -230,10 +232,12 @@ class SystemControl(FlightSoftwareParent):
                         if command.lower() == 'cut the mofo':
                             try:
                                 self.log_info("Cutting payload form uplink command.")
-                                if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+                                if self.system_name == 'MajorTom' or self.system_name == 'Rocky' \
+                                        and not self.has_already_cut_payload:
                                     GPIO.output(self.cutoff_pin_bcm, GPIO.HIGH)
                                     time.sleep(self.cutoff_time_high)
                                     GPIO.output(self.cutoff_pin_bcm, GPIO.LOW)
+                                    self.has_already_cut_payload = True
                             except Exception as err:
                                 self.log_error("Could not cut payload with reported error [%s]" % str(err))
 
@@ -252,10 +256,12 @@ class SystemControl(FlightSoftwareParent):
                 if self.check_auto_cutoff_conditions():
                     try:
                         self.log_info("Cutting payload form auto trigger.")
-                        if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+                        if self.system_name == 'MajorTom' or self.system_name == 'Rocky' \
+                                and not self.has_already_cut_payload:
                             GPIO.output(self.cutoff_pin_bcm, GPIO.HIGH)
                             time.sleep(self.cutoff_time_high)
                             GPIO.output(self.cutoff_pin_bcm, GPIO.LOW)
+                            self.has_already_cut_payload = True
                     except Exception as err:
                         self.log_error("Could not cut payload with reported error [%s]" % str(err))
             except Exception as err:

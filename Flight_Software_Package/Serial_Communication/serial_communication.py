@@ -161,8 +161,10 @@ class SerialCommunication(FlightSoftwareParent):
                     # Valid photo sensor so append the header information
                     if new_data[-1] != ",":
                         # Append ',' if not there at end
-                        new_data.append(",")
-                    new_data.append(data)
+                        new_data += ","
+                    new_data += str(data[0])
+                    new_data += ","
+                    new_data += str(data[1])
                 # remove ',' at end if needed
                 if new_data[-1] == ",":
                     new_data = new_data[0:-1]
@@ -178,8 +180,8 @@ class SerialCommunication(FlightSoftwareParent):
                         # Valid photo sensor so append the header information
                         if new_data[-1] != ",":
                             # Append ',' if not there at end
-                            new_data.append(",")
-                        new_data.append(sensor.data_header_addition)
+                            new_data += ","
+                        new_data += sensor.data_header_addition
                     # remove ',' at end if needed
                     if new_data[-1] == ",":
                         new_data = new_data[0:-1]

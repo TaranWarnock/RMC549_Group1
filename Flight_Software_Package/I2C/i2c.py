@@ -1,5 +1,8 @@
 from Common.FSW_Common import *
-import smbus
+try:
+    import smbus
+except:
+    pass
 
 
 """
