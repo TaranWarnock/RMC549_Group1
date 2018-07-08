@@ -3,9 +3,7 @@
 
 #include <Thread.h>
 #include <Adafruit_BNO055.h>
-#include <TSL2561.h>
 #include <utility/imumaths.h>   // used in IMU code
-#include "SparkFunMPL3115A2.h"
 
 class SensorThread : public Thread {
     protected:
@@ -52,10 +50,10 @@ class GPSSensorThread : public SensorThread {
         GPSSensorThread() : SensorThread("GPS", "UTC,LtDgMn,NS,LnDgMn,EW,Nsat,Alt,Altu") {}
 };
 
+
 class IMUSensorThread : public SensorThread {
     private:
         Adafruit_BNO055* bnoPtr;    // pointer to sensor handler
-        MPL3115A2* preassurePtr;    // pointer to preassure
         bool IMUactive = true, pressureActive = true;
 
         // Function for a single IMU reading
@@ -63,16 +61,9 @@ class IMUSensorThread : public SensorThread {
 
         String getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title);
         String displayCalStatus(void);
-        byte read8bit(byte address, byte ID);
 
     public:
-//        typedef enum{
-//                    IMU_ADDRESS       =  0X07,
-//                    PRESSURE_ADDRESS  =  0x60,
-//                    CHIP_ID_ADDR      =  0x00
-//                }sensorAddress;
-
-        IMUSensorThread(Adafruit_BNO055* bno, MPL3115A2* preassure) : SensorThread(
+        IMUSensorThread(Adafruit_BNO055* bno) : SensorThread(
                 "IMU,Pr",
                 "Acxms2,Acyms2,Aczms2,"
                 "Gyxrs,Gyyrs,Gyzrs,"
@@ -81,9 +72,8 @@ class IMUSensorThread : public SensorThread {
                 "LAcxms2,LAcyms2,LAczms2,"
                 "Gvxms2,Gvyms2,Gvzms2,"
                 "TC,SyCl03,GyCl03,"
-                "AcCl03,MgCl03,PrPa,TPrC") {
+                "AcCl03,MgCl03") {
             bnoPtr = bno;
-            preassurePtr = preassure;
         }
 };
 
@@ -101,17 +91,6 @@ class GeigerSensorThread : public SensorThread {
     public:
         GeigerSensorThread(int interruptPin1, int interruptPin2);
 
-};
-
-class PhotoSensorThread : public SensorThread {
-    private:
-        void readFromSensor() override;
-        
-    private:
-        TSL2561* m_tslPtr[3];    // pointers to sensor handlers
-
-    public:
-        PhotoSensorThread(TSL2561* tslPtr0, TSL2561* tslPtr1, TSL2561* tslPtr2);
 };
 
 #endif
