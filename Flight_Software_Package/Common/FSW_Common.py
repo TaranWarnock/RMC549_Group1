@@ -34,7 +34,7 @@ class FlightSoftwareParent(threading.Thread):
         self.function_diagnostics_end_time     = None
 
         if platform == "linux" or platform == "linux2":
-            self.yaml_config_path = '../Config/master_config.yaml'
+            self.yaml_config_path = '/home/pi/RMC549Repos/RMC549_Group1/Flight_Software_Package/Config/master_config.yaml'
         elif platform == "darwin":
             self.yaml_config_path = '../Config/master_config.yaml'
         elif platform == "win32":

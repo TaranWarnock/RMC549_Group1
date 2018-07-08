@@ -1,4 +1,5 @@
 #include "SensorThread.h"
+#include <Wire.h>
 
 void SensorThread::run() {
     readFromSensor();
@@ -53,7 +54,7 @@ void GPSSensorThread::readFromSensor() {
 
         if (millis() >= startingTime + timeCheck){
 //            active = false;
-            sensorData = ",,,,,";
+            sensorData = ",,,,,,,";
             timeCheck = 2000;
             return;
         }
@@ -72,11 +73,11 @@ void GPSSensorThread::readFromSensor() {
 
 //        Sentances were not read or recieved properly
         if (!NMEA1[NMEA1.length()-4] == '*') {
-            sensorData = ",,,,,";
+            sensorData = ",,,,,,,";
             return;
         }
         if (!NMEA2[NMEA2.length()-4] == '*') {
-            sensorData = ",,,,,";
+            sensorData = ",,,,,,,";
             return;
         }
 
@@ -105,37 +106,101 @@ void GPSSensorThread::readFromSensor() {
             oldIndx = newIndx;
             newIndx = GPGGA.indexOf(",", oldIndx + 1);
         }
-        
+
         sensorData.remove(sensorData.length() - 1);
 
 }
 
 void IMUSensorThread::readFromSensor() {
-    // Put IMU data acquisition code here and save result in sensorData
+    // address of IMU may also be 0x07
+    uint8_t id =  IMUSensorThread::read8bit(0x28, 0x00);
     sensorData = "";
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "A"));
-    sensorData.concat(",");
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gy"));
-    sensorData.concat(",");
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "M"));
-    sensorData.concat(",");
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_EULER, "E"));
-    sensorData.concat(",");
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "L"));
-    sensorData.concat(",");
-    sensorData.concat(getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Gr"));
-    sensorData.concat(",");
 
-    // get temperature and append to sensorData (accuracy of sensor is 1 degree)
-    int temp = bnoPtr->getTemp();
-    sensorData.concat(String(temp));
-    sensorData.concat(",");
-    sensorData.concat(displayCalStatus());
-    sensorData.concat(",");
-    sensorData.concat(preassurePtr->readPressure());
-    sensorData.concat(",");
-    sensorData.concat(preassurePtr->readTemp());
+    if (Wire.requestFrom(0x28, 1, true) && IMUactive)
+        IMUactive = true;
+    else if (Wire.requestFrom(0x28, 1, true) && !IMUactive){
+        // Reinitialise IMU here
+        *bnoPtr = Adafruit_BNO055(55);
+        IMUactive = bnoPtr->begin();
+    }
+    else if (!Wire.requestFrom(0x28, 1, true))
+        IMUactive = false;
+
+    // Put IMU data acquisition code here and save result in sensorData
+    if (IMUactive){
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_ACCELEROMETER, "A"));
+        sensorData.concat(",");
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_GYROSCOPE, "Gy"));
+        sensorData.concat(",");
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_MAGNETOMETER , "M"));
+        sensorData.concat(",");
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_EULER, "E"));
+        sensorData.concat(",");
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_LINEARACCEL, "L"));
+        sensorData.concat(",");
+        sensorData.concat(getvec(Adafruit_BNO055::VECTOR_GRAVITY, "Gr"));
+        sensorData.concat(",");
+
+        // get temperature and append to sensorData (accuracy of sensor is 1 degree)
+        int temp = bnoPtr->getTemp();
+        sensorData.concat(String(temp));
+        sensorData.concat(",");
+        sensorData.concat(displayCalStatus());
+        sensorData.concat(",");
+    }
+    else{
+        sensorData.concat(",,,,,,,,,,,,,,,,,,,,,,,,,,");
+    }
+
+
+    if (Wire.requestFrom(0x60, 1, true) && pressureActive)
+        IMUactive = true;
+    else if (Wire.requestFrom(0x60, 1, true) && !pressureActive){
+        // Reinitialise pressure sensor here
+        preassurePtr->setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
+        preassurePtr->setOversampleRate(7); // Set Oversample to the recommended 128
+        preassurePtr->enableEventFlags(); // Enable all three pressure and temp event flags
+
+
+                pressureActive = true;
+    }
+    else if (!Wire.requestFrom(0x60, 1, true))
+        pressureActive = false;
+
+
+    if (pressureActive){
+        sensorData.concat(preassurePtr->readPressure());
+        sensorData.concat(",");
+        sensorData.concat(preassurePtr->readTemp());
+    }
+    else {
+        sensorData.concat(",");
+    }
 }
+
+
+byte IMUSensorThread::read8bit(byte address, byte ID){
+    byte value = 0;
+
+    Wire.beginTransmission(address);
+    #if ARDUINO >= 100
+        Wire.write((uint8_t)ID);
+    #else
+        Wire.send(ID);
+    #endif
+
+    Wire.endTransmission();
+    Wire.requestFrom(address, (byte)1);
+
+    #if ARDUINO >= 100
+        value = Wire.read();
+    #else
+        value = Wire.receive();
+    #endif
+
+    return value;
+}
+
 
 String IMUSensorThread::getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type,
                                String title) {
@@ -177,7 +242,7 @@ GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2) : S
     m_eventCount[1] = 0;
     m_eventCount[2] = 0;
     m_eventTime[0] = 0;
-    m_eventTime[1] = 0; 
+    m_eventTime[1] = 0;
 
     pinMode(m_interruptPin[0], INPUT);
     pinMode(m_interruptPin[1], INPUT);
@@ -232,22 +297,22 @@ PhotoSensorThread::PhotoSensorThread(TSL2561* tslPtr0, TSL2561* tslPtr1, TSL2561
 }
 
 void PhotoSensorThread::readFromSensor() {
-    
+
     uint32_t lum0, lum1, lum2;
     uint16_t ir0, ir1, ir2, full0, full1, full2;
 
     lum0 = m_tslPtr[0]->getFullLuminosity();
     ir0 = lum0 >> 16;
     full0 = lum0 & 0xFFFF;
-    
+
     lum1 = m_tslPtr[1]->getFullLuminosity();
     ir1 = lum1 >> 16;
     full1 = lum1 & 0xFFFF;
-    
+
     lum2 = m_tslPtr[2]->getFullLuminosity();
     ir2 = lum2 >> 16;
     full2 = lum2 & 0xFFFF;
-    
+
     sensorData = "";
     sensorData.concat(String(full0));
     sensorData.concat(",");
@@ -255,7 +320,7 @@ void PhotoSensorThread::readFromSensor() {
     sensorData.concat(",");
     sensorData.concat(String(full1));
     sensorData.concat(",");
-    sensorData.concat(String(ir1));    
+    sensorData.concat(String(ir1));
     sensorData.concat(",");
     sensorData.concat(String(full2));
     sensorData.concat(",");

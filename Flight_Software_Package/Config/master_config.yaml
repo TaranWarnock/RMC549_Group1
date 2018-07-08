@@ -3,7 +3,7 @@ general:
 
 logger:
     main_delay:                   0.05                                     # Delay [sec] for the run() function of thread
-    log_file_path_Linux:          logs/                                    # Where to save logging files on Linux system
+    log_file_path_Linux:          /home/pi/RMC549Repos/RMC549_Group1/Flight_Software_Package/logs/ # Where to save logging files on Linux system
     log_file_path_Windows:        C:\Users\Daniel_2\Desktop\Test_log_files # Where to save logging files on Windows (lab)
     log_file_path_mac:            /Users/taran/Test_log_files              # Where to save logging files on Mac (lab)
     run_logger_diagnostics:       False                                    # Runs diagnostics on logging functions
@@ -14,6 +14,7 @@ serial_communication:
     default_baud_rate:            115200                                   # Buadrate of serial communication
     default_timeout:              8                                        # Timeout [sec] of serial communication
     reconnection_wait:            5                                        # Delay [sec] to wait before reset on com fail
+    arduino_reset_pin:            23                                       # BCM pin to reset arduino (if applicable)
 
 system_control:
     main_delay:                   3                                        # Delay [sec] for the run() function of thread
@@ -22,13 +23,13 @@ system_control:
     cutoff_BCM_pin_number:        18                                       # The pin number in BCM layout of the cutoff relay
     cut_conditions:                                                        # Conditions which if met or exceeded will cut the payload
         gps_lat:                                                           # GPS Latitude [deg] limits for payload cutoff
-            -                     1
-            -                     2
+            -                     44.226650
+            -                     44.235380
         gps_lon:                                                           # GPS Longitude [deg] limits for payload cutoff
-            -                     3
-            -                     4
+            -                     -76.455131
+            -                     -76.471524
         gps_altitude:                                                      # Altitude [km] limit for payload cutoff
-            -                     12345
+            -                     25
         time:                                                              # UTC which will trigger cutoff. Assumes same day.
             -                     "22:22"
 telemetry:

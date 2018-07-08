@@ -34,6 +34,7 @@ ThreadController controller = ThreadController();
 
 bool doIMU;
 bool doTelemetry;
+bool doPhoto;
 
 void setup() {
 
@@ -60,19 +61,22 @@ void setup() {
   }
 
   // Initialize photosensor 0
-  if(!tsl0.begin()) {
+  doPhoto = tsl0.begin();
+  if(!doPhoto) {
     // error?
   }
   tsl0.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
   tsl0.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
   // Initialize 2nd photosensor 1
-  if(!tsl1.begin()) {
+  doPhoto = doPhoto && tsl1.begin();
+  if(!doPhoto) {
     // error?
   }
   tsl1.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
   tsl1.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
   // Initialize the photosensor 2
-  if(!tsl2.begin()) {
+  doPhoto = doPhoto && tsl2.begin();
+  if(!doPhoto) {
     // error?
   }
   tsl2.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
@@ -221,7 +225,7 @@ void loop() {
   }
 
   // Check for commands from ground
-  if (rf95.available()) {
+  if (doTelemetry && rf95.available()) {
     // Receive the message
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
