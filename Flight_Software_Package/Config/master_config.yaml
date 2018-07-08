@@ -31,7 +31,7 @@ system_control:
         gps_altitude:                                                      # Altitude [km] limit for payload cutoff
             -                     25
         time:                                                              # UTC which will trigger cutoff. Assumes same day.
-            -                     "22:22"
+            -                     "14:10"
 telemetry:
     main_delay:                   0.5                                      # Delay [sec] for the run() function of thread
     buffering_delay:              0                                        # Delay [sec] for different commanding operations
