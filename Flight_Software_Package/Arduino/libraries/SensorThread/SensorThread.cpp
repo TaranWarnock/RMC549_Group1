@@ -54,7 +54,7 @@ void GPSSensorThread::readFromSensor() {
 
         if (millis() >= startingTime + timeCheck){
 //            active = false;
-            sensorData = ",,,,,";
+            sensorData = ",,,,,,,";
             timeCheck = 2000;
             return;
         }
@@ -73,11 +73,11 @@ void GPSSensorThread::readFromSensor() {
 
 //        Sentances were not read or recieved properly
         if (!NMEA1[NMEA1.length()-4] == '*') {
-            sensorData = ",,,,,";
+            sensorData = ",,,,,,,";
             return;
         }
         if (!NMEA2[NMEA2.length()-4] == '*') {
-            sensorData = ",,,,,";
+            sensorData = ",,,,,,,";
             return;
         }
 
