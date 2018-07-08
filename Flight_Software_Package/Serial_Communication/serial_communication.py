@@ -162,7 +162,9 @@ class SerialCommunication(FlightSoftwareParent):
                     if new_data[-1] != ",":
                         # Append ',' if not there at end
                         new_data += ","
-                    new_data += data
+                    new_data += data[0]
+                    new_data += ","
+                    new_data += data[1]
                 # remove ',' at end if needed
                 if new_data[-1] == ",":
                     new_data = new_data[0:-1]
