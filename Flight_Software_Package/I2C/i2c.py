@@ -20,9 +20,12 @@ class I2C_Photosensor(FlightSoftwareParent):
         #		0x03(03)	Power ON mode
         self._bus.write_byte_data(self._addr, 0x00 | 0x80, 0x03)
         # TSL2561 address, 0x39(57)
+
         # Select timing register, 0x01(01) with command register, 0x80(128)
-        #		0x02(02)	Nominal integration time = 402ms
-        self._bus.write_byte_data(self._addr, 0x01 | 0x80, 0x02)
+        #		0x02(02)	Nominal integration time = 402ms (not doing this)
+
+        # 13 ms, 0 gain (0x00) (0x10 would be 16x gain 13 ms, 0x01 would be 1x gain and 101 ms, etc)
+        self._bus.write_byte_data(self._addr, 0x01 | 0x80, 0x00)
 
     def _get_data(self):
         """ Read the data from the sensor. Returns lux values (VIS, IR). Taken from TSL2561.py script. """
