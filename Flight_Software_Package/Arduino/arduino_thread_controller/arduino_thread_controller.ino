@@ -11,22 +11,33 @@
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
+// Comma separated List of unprocessed commands from ground station
+String ground_commands = "";
+
 // create handler for IMU
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 MPL3115A2 preassure;
+
+// light sensor
+TSL2561 tsl0(TSL2561_ADDR_FLOAT);
+TSL2561 tsl1(TSL2561_ADDR_LOW);
+TSL2561 tsl2(TSL2561_ADDR_HIGH);
 
 // create thread for each sensor
 SensorThread* gps_thread = new GPSSensorThread();
 SensorThread* imu_thread = new IMUSensorThread(&bno, &preassure);
 SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
+SensorThread* photo_thread = new PhotoSensorThread(&tsl0, &tsl1, &tsl2);
 
 // create controller to hold the threads
 ThreadController controller = ThreadController();
 
 bool doIMU;
 bool doTelemetry;
+bool doPhoto;
 
 void setup() {
+
   // put your setup code here, to run once:
   // ------------------------ Changing the baud rate of GPS Serial1 port ---------------------------
   Serial1.begin(4800);
@@ -49,6 +60,27 @@ void setup() {
     // could send an error message to the Pi here
   }
 
+  // Initialize photosensor 0
+  doPhoto = tsl0.begin();
+  if(!doPhoto) {
+    // error?
+  }
+  tsl0.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
+  tsl0.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
+  // Initialize 2nd photosensor 1
+  doPhoto = doPhoto && tsl1.begin();
+  if(!doPhoto) {
+    // error?
+  }
+  tsl1.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
+  tsl1.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
+  // Initialize the photosensor 2
+  doPhoto = doPhoto && tsl2.begin();
+  if(!doPhoto) {
+    // error?
+  }
+  tsl2.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
+  tsl2.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
 
   preassure.setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
   preassure.setOversampleRate(7); // Set Oversample to the recommended 128
@@ -77,6 +109,7 @@ void setup() {
   controller.add(gps_thread);
   controller.add(imu_thread);
   controller.add(geiger_thread);
+  controller.add(photo_thread);
 }
 
 void loop() {
@@ -120,7 +153,7 @@ void loop() {
     else if (pi_command.equalsIgnoreCase("HEADER"))
     {
       // Pi has asked for data headers
-      full_data.concat("ArdTimeStamp");
+      full_data.concat("ATSms");
 
       for (int i = 0; i < controller.size(); i++) 
       {
@@ -144,7 +177,6 @@ void loop() {
       // get the current time
       unsigned long time = millis();
       full_data.concat(time);
-      full_data.concat("ms");
       
       for (int i = 0; i < controller.size(); i++) {
         // get sensor data
@@ -176,10 +208,33 @@ void loop() {
       // send OK to the Pi
       Serial.println("OK");
     }
+
+    else if ((pi_command.substring(0, 2)).equalsIgnoreCase("RX"))
+    {
+      // Pi has asked for commands from ground
+      // Send the command list
+      Serial.println(ground_commands);
+      // Clear the command list
+      ground_commands = ""; 
+    }
     
     else
     {
       // Do nothing. Pi will know of error on timeout.
     }
   }
+
+  // Check for commands from ground
+  if (doTelemetry && rf95.available()) {
+    // Receive the message
+    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t len = sizeof(buf);
+    if (rf95.recv(buf, &len)) {
+      // save to command list
+      ground_commands.concat(String((char*)buf));
+    }
+    ground_commands.concat(String(rf95.lastRssi()));
+    ground_commands.concat(",");
+  }
+  
 }

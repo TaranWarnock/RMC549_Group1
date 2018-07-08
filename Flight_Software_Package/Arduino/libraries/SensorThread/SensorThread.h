@@ -3,13 +3,14 @@
 
 #include <Thread.h>
 #include <Adafruit_BNO055.h>
+#include <TSL2561.h>
 #include <utility/imumaths.h>   // used in IMU code
 #include "SparkFunMPL3115A2.h"
 
 class SensorThread : public Thread {
     protected:
         String sensorName;
-                String sensorHeader;
+        String sensorHeader;
         String sensorData;
 
         // Function for a single sensor reading event here
@@ -20,12 +21,12 @@ class SensorThread : public Thread {
         SensorThread() : Thread() {}
         SensorThread(String name, String header) : Thread() {
             sensorName   = name;
-                        sensorHeader = header;
+            sensorHeader = header;
         }
 
         void run() override;
 
-                String getSensorHeader() {
+        String getSensorHeader() {
             return sensorHeader;
         }
 
@@ -41,35 +42,46 @@ class SensorThread : public Thread {
 
 class GPSSensorThread : public SensorThread {
     private:
+//        bool active = true; // variable to decide if GPS is working
+        int timeCheck = 8000; // milliseconds
+
         // Function for a single GPS reading
         void readFromSensor() override;
 
     public:
-        GPSSensorThread() : SensorThread("GPS", "UTC,Latitude(DegMin),Longitude(DegMin),NumberOfSatellitesUsed,Altitude,UnitsAltitude") {}
+        GPSSensorThread() : SensorThread("GPS", "UTC,LtDgMn,NS,LnDgMn,EW,Nsat,Alt,Altu") {}
 };
 
 class IMUSensorThread : public SensorThread {
     private:
         Adafruit_BNO055* bnoPtr;    // pointer to sensor handler
         MPL3115A2* preassurePtr;    // pointer to preassure
+        bool IMUactive = true, pressureActive = true;
 
         // Function for a single IMU reading
         void readFromSensor() override;
 
-                String getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title);
-                String displayCalStatus(void);
+        String getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type, String title);
+        String displayCalStatus(void);
+        byte read8bit(byte address, byte ID);
 
     public:
+//        typedef enum{
+//                    IMU_ADDRESS       =  0X07,
+//                    PRESSURE_ADDRESS  =  0x60,
+//                    CHIP_ID_ADDR      =  0x00
+//                }sensorAddress;
+
         IMUSensorThread(Adafruit_BNO055* bno, MPL3115A2* preassure) : SensorThread(
-                "IMU,PressureSensor",
-                "Accelerometer_x(m/s^2),Accelerometer_y(m/s^2),Accelerometer_z(m/s^2),"
-                "Gyroscope_x(rad/s),Gyroscope_y(rad/s),Gyroscope_z(rad/s),"
-                "Magnetometer_x(uT),Magnetometer_y(uT),Magnetometer_z(uT),"
-                "Euler_x(deg),Euler_y(deg),Euler_z(deg),"
-                "LinearAcceleration_x(m/s^2),LinearAcceleration_y(m/s^2),LinearAcceleration_z(m/s^2),"
-                "Gravity_x(m/s^2),Gravity_y(m/s^2),Gravity_z(m/s^2),"
-                "Temperature(C),SystemCalibration(0-3),GyroCalibration(0-3),"
-                "AccelerometerCalibration(0-3),MagnetometerCalibration(0-3),Pressure(Pa),TemperaturePressureSensor(C)") {
+                "IMU,Pr",
+                "Acxms2,Acyms2,Aczms2,"
+                "Gyxrs,Gyyrs,Gyzrs,"
+                "MgxuT,MgyuT,MgzuT,"
+                "Elxdg,Elydg,Elzdg,"
+                "LAcxms2,LAcyms2,LAczms2,"
+                "Gvxms2,Gvyms2,Gvzms2,"
+                "TC,SyCl03,GyCl03,"
+                "AcCl03,MgCl03,PrPa,TPrC") {
             bnoPtr = bno;
             preassurePtr = preassure;
         }
@@ -87,8 +99,19 @@ class GeigerSensorThread : public SensorThread {
         static volatile unsigned long m_eventTime[2];
 
     public:
-            GeigerSensorThread(int interruptPin1, int interruptPin2);
+        GeigerSensorThread(int interruptPin1, int interruptPin2);
 
+};
+
+class PhotoSensorThread : public SensorThread {
+    private:
+        void readFromSensor() override;
+        
+    private:
+        TSL2561* m_tslPtr[3];    // pointers to sensor handlers
+
+    public:
+        PhotoSensorThread(TSL2561* tslPtr0, TSL2561* tslPtr1, TSL2561* tslPtr2);
 };
 
 #endif

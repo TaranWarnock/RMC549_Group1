@@ -39,7 +39,7 @@ class Logger(threading.Thread):
         self.data_logging_buffer          = []
 
         if platform == "linux" or platform == "linux2":
-            self.yaml_config_path = '../Config/master_config.yaml'
+            self.yaml_config_path = '/home/pi/RMC549Repos/RMC549_Group1/Flight_Software_Package/Config/master_config.yaml'
         elif platform == "darwin":
             self.yaml_config_path = '../Config/master_config.yaml'
         elif platform == "win32":
@@ -148,11 +148,25 @@ class Logger(threading.Thread):
         self.end_logger_diagnostics("write_data_to_log")
 
     def start_logger_diagnostics(self, function_name: str):
+        """
+        This function will start function diagnostics on all logger functions
+
+        Written by Daniel Letros, 2018-06-27
+
+        :return: None
+        """
         if self.run_logger_diagnostics:
             self.current_logger_diagnostics_function_name = function_name
             self.function_logger_diagnostics_start_time   = datetime.datetime.now()
 
     def end_logger_diagnostics(self, function_name: str):
+        """
+        This function will end function diagnostics on all logger functions
+
+        Written by Daniel Letros, 2018-06-27
+
+        :return: None
+        """
         if self.run_logger_diagnostics:
             if self.current_logger_diagnostics_function_name != function_name:
                 print("DIAGNOSTICS << NAMES DO NOT MATCH << GOT [%s] EXPECTED [%s]"
@@ -162,8 +176,16 @@ class Logger(threading.Thread):
                   %(function_name,
                     (self.function_logger_diagnostics_end_time -
                      self.function_logger_diagnostics_start_time).total_seconds()))
+            print("\n")
 
     def run(self):
+        """
+        This is the main function of the logging thread.
+
+        Written by Daniel Letros, 2018-06-27
+
+        :return: None
+        """
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
         while self.should_thread_run:
             if len(self.notifications_logging_buffer) > 0:

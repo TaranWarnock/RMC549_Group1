@@ -11,6 +11,7 @@ import datetime
 from sys import platform
 if socket.gethostname() == "Rocky" or socket.gethostname() == "MajorTom":
     import RPi.GPIO as GPIO
+    import smbus
 from Logger.logger import *
 
 
@@ -33,7 +34,7 @@ class FlightSoftwareParent(threading.Thread):
         self.function_diagnostics_end_time     = None
 
         if platform == "linux" or platform == "linux2":
-            self.yaml_config_path = '../Config/master_config.yaml'
+            self.yaml_config_path = '/home/pi/RMC549Repos/RMC549_Group1/Flight_Software_Package/Config/master_config.yaml'
         elif platform == "darwin":
             self.yaml_config_path = '../Config/master_config.yaml'
         elif platform == "win32":
@@ -70,7 +71,7 @@ class FlightSoftwareParent(threading.Thread):
         :return: None
         """
         self.logger.notifications_logging_buffer.append("ERROR << %s << %s << %s << %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
     def log_warning(self, log_message: str) -> None:
         """
@@ -82,7 +83,7 @@ class FlightSoftwareParent(threading.Thread):
         :return: None
         """
         self.logger.notifications_logging_buffer.append("WARNING << %s << %s << %s << %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
     def log_info(self, log_message: str) -> None:
         """
@@ -94,7 +95,7 @@ class FlightSoftwareParent(threading.Thread):
         :return: None
         """
         self.logger.notifications_logging_buffer.append("INFO << %s << %s << %s << %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), self.system_name, self.class_name, log_message))
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), self.system_name, self.class_name, log_message))
 
     def log_data(self, log_message: str) -> None:
         """
@@ -105,8 +106,8 @@ class FlightSoftwareParent(threading.Thread):
         :param log_message: Info message to log
         :return: None
         """
-        self.logger.data_logging_buffer.append("%s, %s\n" % (
-            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S"), log_message))
+        self.logger.data_logging_buffer.append("%s,%s\n" % (
+            datetime.datetime.utcnow().strftime("%Y%m%d_%H:%M:%S.%f"), log_message))
 
     def read_last_line_in_data_log(self) -> str:
         """
@@ -129,11 +130,25 @@ class FlightSoftwareParent(threading.Thread):
         return content
 
     def start_function_diagnostics(self, function_name: str):
+        """
+        This function will begin function diagnostics on all functions other then logger functions
+
+        Written by Daniel Letros, 2018-06-27
+
+        :return: None
+        """
         if self.run_function_diagnostics:
             self.current_diagnostics_function_name = function_name
             self.function_diagnostics_start_time   = datetime.datetime.now()
 
     def end_function_diagnostics(self, function_name: str):
+        """
+        This function will end function diagnostics on all functions other then logger functions
+
+        Written by Daniel Letros, 2018-06-27
+
+        :return: None
+        """
         if self.run_function_diagnostics:
             if self.current_diagnostics_function_name != function_name:
                 print("DIAGNOSTICS << NAMES DO NOT MATCH << GOT [%s] EXPECTED [%s]"
@@ -142,3 +157,4 @@ class FlightSoftwareParent(threading.Thread):
             print("DIAGNOSTICS << [%s] << TIME_TAKEN [%f]"
                   %(function_name,
                     (self.function_diagnostics_end_time - self.function_diagnostics_start_time).total_seconds()))
+            print("\n")
