@@ -144,7 +144,6 @@ void IMUSensorThread::readFromSensor() {
         sensorData.concat(String(temp));
         sensorData.concat(",");
         sensorData.concat(displayCalStatus());
-        sensorData.concat(",");
     }
     else{
         sensorData.concat(",,,,,,,,,,,,,,,,,,,,,,,,,,");
