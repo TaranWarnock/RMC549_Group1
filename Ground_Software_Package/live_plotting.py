@@ -65,7 +65,7 @@ def set_up_plots():
 
     # todo: plots of counts (vs altitude or time),
 
-def plot_data(data):
+def plot_data(data, header_data):
     '''
     plot a single data point for each of the plots set up in 'set_up_plots()' function.
     This will be called each time a comma separated data list is recieved (so long as a
@@ -80,6 +80,7 @@ def plot_data(data):
 
     # isolate the floats and save them in a dictionary (while checking the units of altitude)
     data = data[1:]
+    header_data = header_data[1:]
     data_dict = dict(zip(header_data, data))
     if data_dict['Altu'] == "KM":
         alt_factor = 1000
@@ -87,7 +88,14 @@ def plot_data(data):
         alt_factor = 1
     data_dict['Alt'] *= alt_factor
     del data_dict['Altu']
-    data_float = [float(i) for i in list(data_dict.values())]
+    del data_dict['NS']
+    del data_dict['EW']
+    data_float = [[] for i in range(len(data_dict))]
+    for i, dai in enumerate(list(data_dict.values())):
+        if dai == "":
+            data_float[i] = ""
+        else:
+            data_float[i] = float(dai)
     data_dict = dict(zip(list(data_dict.keys()), data_float))
     # now plot the data
     def plot_time_x(thedata, fig):
@@ -100,10 +108,14 @@ def plot_data(data):
     def plot_y_x(xdata, ydata, fig):
         plt.figure(fig)
         plt.scatter(xdata, ydata, color='blue')
-    plot_y_x(data_dict['PrPa'], data_dict['Alt'], 1)
-    plot_y_x(data_dict['TPrC'], data_dict['Alt'], 2)
-    plot_time_x(data_dict['Alt'], 3)
-    plot_time_x(data_dict['RSSI'], 4)
+    if not data_dict['PrPa'] == "" and not data_dict['Alt'] == "":
+        plot_y_x(data_dict['PrPa'], data_dict['Alt'], 1)
+    if not data_dict['TPrC'] == "" and not data_dict['Alt'] == "":
+        plot_y_x(data_dict['TPrC'], data_dict['Alt'], 2)
+    if not data_dict['Alt'] == "":
+        plot_time_x(data_dict['Alt'], 3)
+    if not data_dict['RSSI'] == "":
+        plot_time_x(data_dict['RSSI'], 4)
     # accelerometer data
     # global fig, axes
     # axes[0, 0].scatter(pi_time, data_dict['Acxms2'], color='blue')
@@ -118,18 +130,20 @@ def plot_data(data):
     # axes[0, 3].scatter(pi_time, data_dict['Gvxms2'], color='blue')
     # axes[1, 3].scatter(pi_time, data_dict['Gvyms2'], color='blue')
     # axes[2, 3].scatter(pi_time, data_dict['Gvzms2'], color='blue')
-    plot_time_x(data_dict['Nsat'], 6)
+    if not data_dict['Nsat'] == "":
+        plot_time_x(data_dict['Nsat'], 6)
     # Longitude and Latitude map
-    plt.figure(7)
-    left_long = -76.48390
-    right_long = -76.45510
-    top_lat = 44.23739
-    bottom_lat = 44.22415
-    lat = int(data_dict['LtDgMn']/100) + (data_dict['LtDgMn'] - int(data_dict['LtDgMn']/100)*100)/60
-    long = -(int(data_dict['LnDgMn']/100) + (data_dict['LnDgMn'] - int(data_dict['LnDgMn']/100)*100)/60)
-    index_y = np.interp(lat, np.linspace(bottom_lat, top_lat, len(img)), np.arange(0, len(img))[::-1])
-    index_x = np.interp(long, np.linspace(left_long, right_long, len(img[0])), np.arange(0, len(img[0])))
-    plt.scatter(index_x, index_y, color='blue', s=20)
+    if not data_dict['LtDgMn'] == "" and not data_dict['LnDgMn'] == "":
+        plt.figure(7)
+        left_long = -76.48390
+        right_long = -76.45510
+        top_lat = 44.23739
+        bottom_lat = 44.22415
+        lat = int(data_dict['LtDgMn']/100) + (data_dict['LtDgMn'] - int(data_dict['LtDgMn']/100)*100)/60
+        long = -(int(data_dict['LnDgMn']/100) + (data_dict['LnDgMn'] - int(data_dict['LnDgMn']/100)*100)/60)
+        index_y = np.interp(lat, np.linspace(bottom_lat, top_lat, len(img)), np.arange(0, len(img))[::-1])
+        index_x = np.interp(long, np.linspace(left_long, right_long, len(img[0])), np.arange(0, len(img[0])))
+        plt.scatter(index_x, index_y, color='blue', s=20)
 
     plt.pause(0.05)
 
@@ -141,11 +155,11 @@ def read_last_line_in_data_log():
 
     :return: None
     """
-    timestamp = datetime.datetime.utcnow().strftime("%Y%m%d")
-    log_file_path = r"C:\Users\puetz\Desktop\Telemtry_logs"
-    log_file_path += os.sep + timestamp
-    file_name = log_file_path + os.sep + timestamp + "_data.txt"
-    # file_name = r'C:\Users\puetz\Desktop\Telemtry_logs\Test\test.txt' # test generated data
+    # timestamp = datetime.datetime.utcnow().strftime("%Y%m%d")
+    # log_file_path = r"C:\Users\puetz\Desktop\Telemtry_logs"
+    # log_file_path += os.sep + timestamp
+    # file_name = log_file_path + os.sep + timestamp + "_data.txt"
+    file_name = r'C:\Users\puetz\Desktop\Telemtry_logs\Test\test.txt' # test generated data
     try:
         with open(file_name, 'rb') as f:
             f.seek(-2, os.SEEK_END)
@@ -194,9 +208,9 @@ if __name__ == '__main__':
             data = data.split(',')
 
 
-        if not header_data == "dummy" and data[0][0] == '2' and not (np.array(data) == "").any():
+        if not header_data == "dummy" and data[0][0] == '2':
             #print('A')
-            plot_data(data)
+            plot_data(data, header_data)
 
 
 
