@@ -221,7 +221,7 @@ class SystemControl(FlightSoftwareParent):
                             except Exception as err:
                                 self.log_error("Error checking for GPS altitude cutoff [%s]" % str(err))
                         col_count += 1
-                    should_cut = should_cut and have_gps_sat_lock
+                    # should_cut = should_cut and have_gps_sat_lock
                     if not have_gps_sat_lock:
                         self.good_altitude_count = 0
                 else:
