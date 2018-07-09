@@ -161,7 +161,7 @@ class SystemControl(FlightSoftwareParent):
                                 temp_time = temp_time + gps_HHMMSS[0:2] + ":" + \
                                             gps_HHMMSS[2:4] + ":" + gps_HHMMSS[4:6]
                                 if (self.cutoff_conditions['time'][0] -
-                                        datetime.datetime.strptime(temp_time, "%Y%m%d_%H:%M:%s")).total_seconds() <= 0:
+                                        datetime.datetime.strptime(temp_time, "%Y%m%d_%H:%M:%S")).total_seconds() <= 0:
                                     should_cut = True
                                     self.log_info("Cutting payload due to GPS time trigger.")
                                 have_gps_sat_lock = True  # IF this is not failing by this point we have enough sats to call data good
