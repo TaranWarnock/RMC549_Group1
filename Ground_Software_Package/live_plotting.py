@@ -12,8 +12,26 @@ fig = ""
 axes = ""
 fig_a = fig_g = fig_m = ""
 ax_a = ax_g = ax_m = ""
+home_alt = 330
+home_lat = 43.86838
+home_long = -81.29625
 
-def set_up_plots():
+def calc_distance(home_alt, home_lat, home_long, alt, lat, long):
+    # calculate distance based on true long and lat
+    rearth = (6371*1000)
+    home_long = home_long*np.pi/180
+    home_lat = home_lat*np.pi/180
+    lat = lat*np.pi/180
+    long = long*np.pi/180
+    x = (rearth + alt) * np.cos(lat) * np.sin(long)
+    y = (rearth + alt) * np.sin(lat)
+    z = (rearth + alt) * np.cos(lat) * np.cos(long)
+    x1 = (rearth + home_alt) * np.cos(home_lat) * np.sin(home_long)
+    y1 = (rearth + home_alt) * np.sin(home_lat)
+    z1 = (rearth + home_alt) * np.cos(home_lat) * np.cos(home_long)
+    return np.sqrt((x - x1) ** 2 + (y - y1) ** 2 + (z - z1) ** 2)
+
+def set_up_plots(refresh=False, refresh_imu=False):
     '''
     set the the axes of the plots that are desired
 
@@ -35,15 +53,16 @@ def set_up_plots():
     plt.xlabel('Time')
     plt.ylabel('RSSI')
     global fig, axes
-    fig, axes = plt.subplots(3, 3, figsize=(18, 9), num=4, sharex=True)
-    fig.suptitle('IMU Sensor Suite (Whole Mission)')
-    axes[0, 0].set_title('Accel')
-    axes[0, 1].set_title('Gyro')
-    axes[0, 2].set_title('Magnet')
-    #axes[0, 3].set_title('Gravity')
-    axes[0, 0].set_ylabel('X')
-    axes[1, 0].set_ylabel('Y')
-    axes[2, 0].set_ylabel('Z')
+    if (not refresh and not refresh_imu) or refresh_imu:
+        fig, axes = plt.subplots(3, 3, figsize=(18, 9), num=4, sharex=True)
+        fig.suptitle('IMU Sensor Suite (Whole Mission)')
+        axes[0, 0].set_title('Accel')
+        axes[0, 1].set_title('Gyro')
+        axes[0, 2].set_title('Magnet')
+        #axes[0, 3].set_title('Gravity')
+        axes[0, 0].set_ylabel('X')
+        axes[1, 0].set_ylabel('Y')
+        axes[2, 0].set_ylabel('Z')
     plt.figure(5)
     plt.title('Number of GPS Satellites used')
     plt.xlabel('Time')
@@ -55,8 +74,8 @@ def set_up_plots():
     imgplot = plt.imshow(img)
     plt.figure(7)
     plt.title('Location of payload')
-    img1 = mpimg.imread(r'C:\Users\puetz\Downloads\large_wingham.PNG')
-    imgplot1 = plt.imshow(img1)
+    img_large = mpimg.imread(r'C:\Users\puetz\Downloads\large_wingham.PNG')
+    imgplot1 = plt.imshow(img_large)
     # these while loop may only be needed for specific png files
     # i = 0
     # while not (img[i][0] == np.array([1, 1, 1, 1])).all():
@@ -116,6 +135,10 @@ def set_up_plots():
     ax_m.set_xlabel('X')
     ax_m.set_ylabel('Y')
     plt.title('Magnetometer Direction')
+    plt.figure(17)
+    plt.title('Distance to Payload')
+    plt.ylabel('Distance')
+    plt.xlabel('Time')
 
 def plot_data(data, header_data):
     '''
@@ -128,9 +151,15 @@ def plot_data(data, header_data):
     :param data: the list of data generated from the downlinked comma separated data list
     :return: None
     '''
+    if not len(plt.get_fignums()) == 17:
+        if not plt.fignum_exists(4):
+            set_up_plots(refresh_imu=True)
+        else:
+            set_up_plots(refresh=True)
+    global fig, axes
     pi_time = datetime.datetime.strptime(data[0], '%Y%m%d_%X.%f')
-
     # isolate the floats and save them in a dictionary (while checking the units of altitude)
+    del data[-5]
     data = data[1:]
     header_data = header_data[1:]
     data_dict = dict(zip(header_data, data))
@@ -167,7 +196,6 @@ def plot_data(data, header_data):
     if not data_dict['RSSI'] == "":
         plot_time_x(data_dict['RSSI'], 3)
     # accelerometer data
-    global fig, axes
     def plot_time_x_sub(thedata, ax):
         ax.plot([], [])
         ax.scatter(pi_time, thedata, color='blue')
@@ -201,6 +229,7 @@ def plot_data(data, header_data):
     if not data_dict['Nsat'] == "":
         plot_time_x(data_dict['Nsat'], 5)
     # Longitude and Latitude map
+    global img, img_large
     if not data_dict['LtDgMn'] == "" and not data_dict['LnDgMn'] == "":
         plt.figure(6)
         # kingston
@@ -214,10 +243,10 @@ def plot_data(data, header_data):
         # top_lat = 43.96803
         # bottom_lat = 43.66735
         # real wingham
-        left_long = --81.41625
+        left_long = -81.41625
         right_long = -80.45979
-        top_lat = 43.60416
-        bottom_lat = 43.96321
+        bottom_lat = 43.60416
+        top_lat = 43.96321
         lat = int(data_dict['LtDgMn']/100) + (data_dict['LtDgMn'] - int(data_dict['LtDgMn']/100)*100)/60
         long = -(int(data_dict['LnDgMn']/100) + (data_dict['LnDgMn'] - int(data_dict['LnDgMn']/100)*100)/60)
         index_y = np.interp(lat, np.linspace(bottom_lat, top_lat, len(img)), np.arange(0, len(img))[::-1])
@@ -225,14 +254,14 @@ def plot_data(data, header_data):
         plt.scatter(index_x, index_y, color='blue', s=20)
         # large wingham
         plt.figure(7)
-        left_long = -82.14579
-        right_long = -79.30585
-        top_lat = 44.51928
-        bottom_lat = 43.25126
+        left_long = -82.1237
+        right_long = -79.2730
+        top_lat = 44.51719
+        bottom_lat = 43.2587
         lat = int(data_dict['LtDgMn']/100) + (data_dict['LtDgMn'] - int(data_dict['LtDgMn']/100)*100)/60
         long = -(int(data_dict['LnDgMn']/100) + (data_dict['LnDgMn'] - int(data_dict['LnDgMn']/100)*100)/60)
-        index_y = np.interp(lat, np.linspace(bottom_lat, top_lat, len(img)), np.arange(0, len(img))[::-1])
-        index_x = np.interp(long, np.linspace(left_long, right_long, len(img[0])), np.arange(0, len(img[0])))
+        index_y = np.interp(lat, np.linspace(bottom_lat, top_lat, len(img_large)), np.arange(0, len(img_large))[::-1])
+        index_x = np.interp(long, np.linspace(left_long, right_long, len(img_large[0])), np.arange(0, len(img_large[0])))
         plt.scatter(index_x, index_y, color='blue', s=20)
     # counts vs time and altitude profiles
     if not data_dict['C1'] == "":
@@ -270,6 +299,13 @@ def plot_data(data, header_data):
     plot_directions(fig_a, ax_a, 'Acxms2', 'Acyms2', 'Aczms2', 'Accelerometer Direction')
     plot_directions(fig_g, ax_g, 'Gyxrs', 'Gyyrs', 'Gyzrs', 'Gyroscope Direction')
     plot_directions(fig_m, ax_m, 'MgxuT', 'MgyuT', 'MgzuT', 'Magnetometer Direction')
+    if not data_dict['LtDgMn'] == "" and not data_dict['LnDgMn'] == "" and not data_dict['Alt'] == "":
+        global home_alt, home_lat, home_long
+        lat = int(data_dict['LtDgMn']/100) + (data_dict['LtDgMn'] - int(data_dict['LtDgMn']/100)*100)/60
+        long = -(int(data_dict['LnDgMn']/100) + (data_dict['LnDgMn'] - int(data_dict['LnDgMn']/100)*100)/60)
+        dist = calc_distance(home_alt, home_lat, home_long, data_dict['Alt'], lat, long)
+        plot_time_x(dist, 17)
+
     plt.pause(0.05)
 
 def read_last_line_in_data_log():
@@ -280,11 +316,11 @@ def read_last_line_in_data_log():
 
     :return: None
     """
-    timestamp = datetime.datetime.utcnow().strftime("%Y%m%d")
-    log_file_path = r"C:\Users\puetz\Desktop\Telemtry_logs"
-    log_file_path += os.sep + timestamp
-    file_name = log_file_path + os.sep + timestamp + "_data.txt"
-    # file_name = r'C:\Users\puetz\Desktop\Telemtry_logs\Test\test.txt' # test generated data
+    # timestamp = datetime.datetime.utcnow().strftime("%Y%m%d")
+    # log_file_path = r"C:\Users\puetz\Desktop\Telemtry_logs"
+    # log_file_path += os.sep + timestamp
+    # file_name = log_file_path + os.sep + timestamp + "_data.txt"
+    file_name = r'C:\Users\puetz\Desktop\Telemtry_logs\Test\test.txt' # test generated data
     # file_name = r'C:\Users\puetz\Desktop\litest.txt'
     try:
         with open(file_name, 'rb') as f:
