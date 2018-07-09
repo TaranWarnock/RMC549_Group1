@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # Instantiate I2C Photosensors connected to Pi
     photo_sensor_one   = I2C_Photosensor(0x39, "PiPto1")
     photo_sensor_two   = I2C_Photosensor(0x49, "PiPto2")
-    photo_sensor_three = I2C_Photosensor(0x59, "PiPto3")
+    photo_sensor_three = I2C_Photosensor(0x29, "PiPto3")
 
     # Create threads
     Logging_Thread              = Logger()

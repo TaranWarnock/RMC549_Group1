@@ -25,6 +25,7 @@ class SystemControl(FlightSoftwareParent):
         self.data_header = None
 
         self.has_already_cut_payload = False
+        self.good_altitude_count     = 0
 
         # Rewrite time cutoff condition as a datetime object
         temp_time = datetime.datetime.utcnow().strftime("%Y%m%d_")
@@ -119,11 +120,11 @@ class SystemControl(FlightSoftwareParent):
         :param dms: DMS value
         :return: Decimal value
         """
-        self.start_function_diagnostics("convert_dms_to_dd")
+        self.start_function_diagnostics("convert_NEMA_to_deci")
         day  = int(float(nmea)/100)
         rest = (float(nmea) - (day*100))/60
         dec  = day + rest
-        self.end_function_diagnostics("convert_dms_to_dd")
+        self.end_function_diagnostics("convert_NEMA_to_deci")
         return dec
 
     def check_auto_cutoff_conditions(self) -> bool:
@@ -142,16 +143,27 @@ class SystemControl(FlightSoftwareParent):
                     if (self.cutoff_conditions['time'][0] - datetime.datetime.utcnow()).total_seconds() <= 0:
                         should_cut = True
                         self.log_info("Cutting payload due to Pi time trigger.")
-                except:
-                    self.log_error("Error checking for Pi timestamp payload cutoff")
+                except Exception as err:
+                    self.log_error("Error checking for Pi timestamp payload cutoff [%s]" % str(err))
 
                 # Check GPS if Pi time says don't do it yet
                 if self.data_header is not None and not should_cut and self.serial_object.ports_are_good:
                     last_data_line = self.read_last_line_in_data_log().split(',')
                     header_list    = self.data_header.split(',')
                     col_count = 0
+                    have_gps_sat_lock = False
                     for header in header_list:
-                        if header == "UTC":
+                        if header == "Nsat":
+                            try:
+                                n_sat = float(last_data_line[col_count])
+                                if n_sat >= 4:
+                                    have_gps_sat_lock = True
+                                else:
+                                    have_gps_sat_lock = False
+                                    self.log_info("GPS has bad sat lock [%f]" % n_sat)
+                            except Exception as err:
+                                self.log_error("Error checking for GPS sat lock [%s]" % str(err))
+                        elif header == "UTC":
                             # Check GPS Timestamp
                             try:
                                 gps_HHMMSS = str(last_data_line[col_count])
@@ -160,29 +172,33 @@ class SystemControl(FlightSoftwareParent):
                                 temp_time = temp_time + gps_HHMMSS[0:2] + ":" + \
                                             gps_HHMMSS[2:4] + ":" + gps_HHMMSS[4:6]
                                 if (self.cutoff_conditions['time'][0] -
-                                        datetime.datetime.strptime(temp_time, "%Y%m%d_%H:%M:%s")).total_seconds() <= 0:
+                                        datetime.datetime.strptime(temp_time, "%Y%m%d_%H:%M:%S")).total_seconds() <= 0:
                                     should_cut = True
                                     self.log_info("Cutting payload due to GPS time trigger.")
-                            except:
-                                self.log_error("Error checking for GPS timestamp payload cutoff")
+                            except Exception as err:
+                                self.log_error("Error checking for GPS timestamp payload cutoff [%s]" % str(err))
                         elif header == "LtDgMn":
                             try:
                                 deci_deg    = self.convert_NEMA_to_deci(str(last_data_line[col_count]))
                                 if deci_deg >= np.max(self.cutoff_conditions['gps_lat']) or \
                                         deci_deg <= np.min(self.cutoff_conditions['gps_lat']):
                                     should_cut = True
-                                    self.log_info("Cutting payload due to GPS latitude [%f] trigger." % deci_deg)
-                            except:
-                                self.log_error("Error checking for GPS latitude payload cutoff")
+                                    self.log_info("Cutting payload due to GPS latitude [%f,%f/%f] trigger." % (deci_deg,
+                                                                                                               np.min(self.cutoff_conditions['gps_lat']),
+                                                                                                               np.max(self.cutoff_conditions['gps_lat'])))
+                            except Exception as err:
+                                self.log_error("Error checking for GPS latitude payload cutoff [%s]" % str(err))
                         elif header == "LnDgMn":
                             try:
                                 deci_deg = self.convert_NEMA_to_deci(str(last_data_line[col_count]))
                                 if deci_deg >= np.max(self.cutoff_conditions['gps_lon']) or \
                                         deci_deg <= np.min(self.cutoff_conditions['gps_lon']):
                                     should_cut = True
-                                    self.log_info("Cutting payload due to GPS longitude [%f] trigger." % deci_deg)
-                            except:
-                                self.log_error("Error checking for GPS longitude payload cutoff")
+                                    self.log_info("Cutting payload due to GPS longitude [%f, %f/%f] trigger." % (deci_deg,
+                                                                                                                 np.min(self.cutoff_conditions['gps_lon']),
+                                                                                                                 np.max(self.cutoff_conditions['gps_lon'])))
+                            except Exception as err:
+                                self.log_error("Error checking for GPS longitude payload cutoff [%s]" % str(err))
                         elif header == "Alt":
                             try:
                                 altitude        = float(last_data_line[col_count])
@@ -196,13 +212,18 @@ class SystemControl(FlightSoftwareParent):
                                     # Convert to km
                                     altitude /= 1000
                                 if altitude >= self.cutoff_conditions['gps_altitude'][0]:
-                                    should_cut = True
+                                    self.good_altitude_count += 1
+                                    if self.good_altitude_count >= 10:
+                                        should_cut = True
                                     self.log_info("Cutting payload due to GPS altitude [%f]" % altitude)
                                 else:
-                                    pass
-                            except:
-                                self.log_error("Error checking for GPS altitude cutoff")
+                                    self.good_altitude_count = 0
+                            except Exception as err:
+                                self.log_error("Error checking for GPS altitude cutoff [%s]" % str(err))
                         col_count += 1
+                    should_cut = should_cut and have_gps_sat_lock
+                    if not have_gps_sat_lock:
+                        self.good_altitude_count = 0
                 else:
                     pass
             except Exception as err:
