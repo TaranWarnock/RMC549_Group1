@@ -24,10 +24,10 @@ system_control:
     cut_conditions:                                                        # Conditions which if met or exceeded will cut the payload
         gps_lat:                                                           # GPS Latitude [deg] limits for payload cutoff. Proper hemisphere is not checked enter appropriate positive numbers.
             -                     0 #43.15 #44.226650 #RMC
-            -                     100 #43.6  #44.235380 #RMC
+            -                     1 #43.6  #44.235380 #RMC
         gps_lon:                                                           # GPS Longitude [deg] limits for payload cutoff. Proper hemisphere is not checked enter appropriate positive numbers.
             -                     0 #80.4  #76.455131 #RMC
-            -                     100 #81.5  #76.471524 #RMC
+            -                     1 #81.5  #76.471524 #RMC
         gps_altitude:                                                      # Altitude [km] limit for payload cutoff
             -                     30
         time:                                                              # UTC which will trigger cutoff. Assumes same day.
