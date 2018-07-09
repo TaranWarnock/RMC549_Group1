@@ -253,7 +253,7 @@ class SystemControl(FlightSoftwareParent):
                         if command.lower() == 'cut the mofo':
                             try:
                                 self.log_info("Cutting payload form uplink command.")
-                                if self.system_name == 'MajorTom' or self.system_name == 'Rocky' \
+                                if (self.system_name == 'MajorTom' or self.system_name == 'Rocky') \
                                         and not self.has_already_cut_payload:
                                     GPIO.output(self.cutoff_pin_bcm, GPIO.HIGH)
                                     time.sleep(self.cutoff_time_high)
@@ -277,7 +277,7 @@ class SystemControl(FlightSoftwareParent):
                 if self.check_auto_cutoff_conditions():
                     try:
                         self.log_info("Cutting payload form auto trigger.")
-                        if self.system_name == 'MajorTom' or self.system_name == 'Rocky' \
+                        if (self.system_name == 'MajorTom' or self.system_name == 'Rocky') \
                                 and not self.has_already_cut_payload:
                             GPIO.output(self.cutoff_pin_bcm, GPIO.HIGH)
                             time.sleep(self.cutoff_time_high)
