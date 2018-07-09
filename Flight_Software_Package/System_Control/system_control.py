@@ -142,8 +142,8 @@ class SystemControl(FlightSoftwareParent):
                     if (self.cutoff_conditions['time'][0] - datetime.datetime.utcnow()).total_seconds() <= 0:
                         should_cut = True
                         self.log_info("Cutting payload due to Pi time trigger.")
-                except:
-                    self.log_error("Error checking for Pi timestamp payload cutoff")
+                except Exception as err:
+                    self.log_error("Error checking for Pi timestamp payload cutoff [%s]" % str(err))
 
                 # Check GPS if Pi time says don't do it yet
                 if self.data_header is not None and not should_cut and self.serial_object.ports_are_good:
@@ -163,8 +163,8 @@ class SystemControl(FlightSoftwareParent):
                                         datetime.datetime.strptime(temp_time, "%Y%m%d_%H:%M:%s")).total_seconds() <= 0:
                                     should_cut = True
                                     self.log_info("Cutting payload due to GPS time trigger.")
-                            except:
-                                self.log_error("Error checking for GPS timestamp payload cutoff")
+                            except Exception as err:
+                                self.log_error("Error checking for GPS timestamp payload cutoff [%s]" % str(err))
                         elif header == "LtDgMn":
                             try:
                                 deci_deg    = self.convert_NEMA_to_deci(str(last_data_line[col_count]))
@@ -172,8 +172,8 @@ class SystemControl(FlightSoftwareParent):
                                         deci_deg <= np.min(self.cutoff_conditions['gps_lat']):
                                     should_cut = True
                                     self.log_info("Cutting payload due to GPS latitude [%f] trigger." % deci_deg)
-                            except:
-                                self.log_error("Error checking for GPS latitude payload cutoff")
+                            except Exception as err:
+                                self.log_error("Error checking for GPS latitude payload cutoff [%s]" % str(err))
                         elif header == "LnDgMn":
                             try:
                                 deci_deg = self.convert_NEMA_to_deci(str(last_data_line[col_count]))
@@ -181,8 +181,8 @@ class SystemControl(FlightSoftwareParent):
                                         deci_deg <= np.min(self.cutoff_conditions['gps_lon']):
                                     should_cut = True
                                     self.log_info("Cutting payload due to GPS longitude [%f] trigger." % deci_deg)
-                            except:
-                                self.log_error("Error checking for GPS longitude payload cutoff")
+                            except Exception as err:
+                                self.log_error("Error checking for GPS longitude payload cutoff [%s]" % str(err))
                         elif header == "Alt":
                             try:
                                 altitude        = float(last_data_line[col_count])
@@ -200,8 +200,8 @@ class SystemControl(FlightSoftwareParent):
                                     self.log_info("Cutting payload due to GPS altitude [%f]" % altitude)
                                 else:
                                     pass
-                            except:
-                                self.log_error("Error checking for GPS altitude cutoff")
+                            except Exception as err:
+                                self.log_error("Error checking for GPS altitude cutoff [%s]" % str(err))
                         col_count += 1
                 else:
                     pass

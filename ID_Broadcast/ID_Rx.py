@@ -3,7 +3,7 @@ import time
 import datetime
 
 Look_At_Rocky    = True
-Look_At_MajorTom = True
+Look_At_MajorTom = False
 
 UDP_IP   = "0.0.0.0"
 UDP_PORT = 55555
