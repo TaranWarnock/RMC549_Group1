@@ -119,11 +119,11 @@ class SystemControl(FlightSoftwareParent):
         :param dms: DMS value
         :return: Decimal value
         """
-        self.start_function_diagnostics("convert_dms_to_dd")
+        self.start_function_diagnostics("convert_NEMA_to_deci")
         day  = int(float(nmea)/100)
         rest = (float(nmea) - (day*100))/60
         dec  = day + rest
-        self.end_function_diagnostics("convert_dms_to_dd")
+        self.end_function_diagnostics("convert_NEMA_to_deci")
         return dec
 
     def check_auto_cutoff_conditions(self) -> bool:
@@ -171,7 +171,9 @@ class SystemControl(FlightSoftwareParent):
                                 if deci_deg >= np.max(self.cutoff_conditions['gps_lat']) or \
                                         deci_deg <= np.min(self.cutoff_conditions['gps_lat']):
                                     should_cut = True
-                                    self.log_info("Cutting payload due to GPS latitude [%f] trigger." % deci_deg)
+                                    self.log_info("Cutting payload due to GPS latitude [%f,%f/%f] trigger." % (deci_deg,
+                                                                                                               np.min(self.cutoff_conditions['gps_lat']),
+                                                                                                               np.max(self.cutoff_conditions['gps_lat'])))
                             except Exception as err:
                                 self.log_error("Error checking for GPS latitude payload cutoff [%s]" % str(err))
                         elif header == "LnDgMn":
@@ -180,7 +182,9 @@ class SystemControl(FlightSoftwareParent):
                                 if deci_deg >= np.max(self.cutoff_conditions['gps_lon']) or \
                                         deci_deg <= np.min(self.cutoff_conditions['gps_lon']):
                                     should_cut = True
-                                    self.log_info("Cutting payload due to GPS longitude [%f] trigger." % deci_deg)
+                                    self.log_info("Cutting payload due to GPS longitude [%f, %f/%f] trigger." % (deci_deg,
+                                                                                                                 np.min(self.cutoff_conditions['gps_lon']),
+                                                                                                                 np.max(self.cutoff_conditions['gps_lon'])))
                             except Exception as err:
                                 self.log_error("Error checking for GPS longitude payload cutoff [%s]" % str(err))
                         elif header == "Alt":

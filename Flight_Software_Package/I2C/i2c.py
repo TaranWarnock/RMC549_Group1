@@ -17,7 +17,7 @@ class I2C_Photosensor(object):
         self.class_name           = class_name
         self.system_name          = socket.gethostname()
         self.data_header_addition = "%sVIS, %sIR" % (self.class_name, self.class_name)
-        if i2c_address not in [0x39, 0x49, 0x59]:
+        if i2c_address not in [0x29, 0x39, 0x49]:
             self.sensor_is_valid = False
         elif socket.gethostname() != "Rocky":
             self.sensor_is_valid = False
