@@ -9,12 +9,20 @@ class Telemetry(FlightSoftwareParent):
     """
 
     def __init__(self, logging_object: Logger, serial_object: SerialCommunication) -> None:
-        self.main_delay           = 0.5
-        self.data_downlink_delay  = 9
-        self.buffering_delay      = 0.05
-        self.enable_telemetry     = True
-        super().__init__("Telemetry", logging_object)
-        self.serial_object         = serial_object
+        """
+        Init of class.
+
+        Written by Daniel Letros, 2018-07-02
+
+        :param logging_object: Reference to the logging object
+        :param serial_object: Reference to the serial object
+        """
+        self.main_delay           = 0.5                # Main delay for thread.
+        self.data_downlink_delay  = 9                  # How often in seconds to send down telemetry data.
+        self.buffering_delay      = 0.05               # A time delay for some aspects of code. Used mostly to debug.
+        self.enable_telemetry     = True               # Enable/disable for the telemetry.
+        super().__init__("Telemetry", logging_object)  # Run init of parent object.
+        self.serial_object         = serial_object     # Reference to serial object.
 
     def load_yaml_settings(self)->None:
         """
@@ -43,6 +51,7 @@ class Telemetry(FlightSoftwareParent):
         """
 
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
+        # Declare timestamps which keep track of telemetry interval.
         tx_timer_start = datetime.datetime.now()
         tx_timer_end   = datetime.datetime.now()
         while self.should_thread_run:
@@ -73,6 +82,7 @@ class Telemetry(FlightSoftwareParent):
                                 # All commands deleted OR all threads have seen what they want to.
                                 if len(self.serial_object.last_uplink_commands) == 0 or \
                                         self.serial_object.last_uplink_seen_by_system_control:
+                                    # Reset uplink command cycle
                                     self.serial_object.last_uplink_seen_by_system_control = False
                                     self.serial_object.last_uplink_commands_valid         = False
             except Exception as err:

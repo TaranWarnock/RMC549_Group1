@@ -2,6 +2,8 @@ from Common.FSW_Common import *
 from Serial_Communication.serial_communication import SerialCommunication
 from Telemetry.telemetry import Telemetry
 from System_Control.system_control import SystemControl
+
+
 class CommandAndControl(FlightSoftwareParent):
     """
     This class is designed to handle all commanding and controlling of the flight software for the RMC 549 balloon(s).
@@ -14,12 +16,23 @@ class CommandAndControl(FlightSoftwareParent):
                  serial_object: SerialCommunication,
                  telemetry_object: Telemetry,
                  system_control_object: SystemControl) -> None:
-        self.buffering_delay              = 0.1
-        self.que_data_delay               = 5
-        super().__init__("CommandAndControl", logging_object)
-        self.serial_object         = serial_object
-        self.system_control_object = system_control_object
-        self.telemetry_object      = telemetry_object
+        """
+        Init function of the command and control class.
+
+        :param logging_object: Reference to the logging object.
+        :param serial_object: Reference to the serial object.
+        :param telemetry_object: Reference to the telemetry object.
+        :param system_control_object: Reference to the system control object.
+
+        Written by Daniel Letros, 2018-06-27
+        """
+        self.buffering_delay              = 0.1  # A time delay for some aspects of code. Used primarily to debugging.
+        self.que_data_delay               = 5    # How often data from the sensors will be asked for.
+
+        super().__init__("CommandAndControl", logging_object)  # Call parent init.
+        self.serial_object         = serial_object             # Reference to serial object
+        self.system_control_object = system_control_object     # Reference to system control object
+        self.telemetry_object      = telemetry_object          # Reference to telemetry object.
 
     def load_yaml_settings(self)->None:
         """
