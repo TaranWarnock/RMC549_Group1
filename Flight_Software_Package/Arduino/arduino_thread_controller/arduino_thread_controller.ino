@@ -1,23 +1,34 @@
-#include <SensorThread.h>
-#include <ThreadController.h>
-#include <RH_RF95.h>
+/*
+ * file: arduino_thread_controller.ino
+ * 
+ * Main program for the retrieval of data from balloon payload sensors. 
+ * Designed for an Adafruit Feather M0 Adalogger and to be powered through
+ * its micro-USB port by a Raspberry Pi. The Pi also uses serial communication
+ * through the micro-USB port to send instructions to the arduino, and the
+ * arduino sends data back to the Pi over this connection.
+ * 
+ * Telemetry is performed with LoRa using the library RH_RF95.h, found here:
+ * https://github.com/adafruit/RadioHead
+ */
+
+#include <SensorThread.h>     // library of customized threads for each sensor type
+#include <ThreadController.h> // use ThreadController to manage all sensor threads
+#include <RH_RF95.h>          // library for the LoRa transceiver
 
 // Telemetry definitions
-#define RFM95_CS 5
-#define RFM95_RST 6
-#define RFM95_INT 9
-// Change to 434.0 or other frequency, must match RX's freq!
-#define RF95_FREQ 434.0
+#define RFM95_CS 5            // slave select pin
+#define RFM95_RST 6           // reset pin
+#define RFM95_INT 9           // interrupt pin
+#define RF95_FREQ 434.0       // frequency, must match ground transceiver!
+
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // Comma separated List of unprocessed commands from ground station
 String ground_commands = "";
 
-// create handler for IMU
+// create handlers for IMU and pressure sensor
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
-
-
 
 // create thread for each sensor
 SensorThread* gps_thread = new GPSSensorThread();
@@ -27,12 +38,13 @@ SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
 // create controller to hold the threads
 ThreadController controller = ThreadController();
 
+// booleans to check if sensors should be run
 bool doIMU;
 bool doTelemetry;
 
 void setup() {
-
   // put your setup code here, to run once:
+  
   // ------------------------ Changing the baud rate of GPS Serial1 port ---------------------------
   Serial1.begin(4800);
   Serial1.write("$PTNLSPT,115200,8,N,1,4,4*11\r\n");
@@ -53,7 +65,6 @@ void setup() {
   {
     // could send an error message to the Pi here
   }
-  
 
   // Initialize telemetry
   pinMode(RFM95_RST, OUTPUT);
@@ -71,7 +82,7 @@ void setup() {
   // The default transmitter power is 13dBm, using PA_BOOST.
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
   // you can set transmitter powers from 5 to 23 dBm:
-  rf95.setTxPower(23, false);
+  rf95.setTxPower(23, false);   // set power to maximum of 23 dBm
   delay(1000);
 
   // add each thread to the controller
@@ -81,15 +92,18 @@ void setup() {
 }
 
 void loop() {
+  // put main program code here, to loop forever:
+  
   String full_data;  // full data array to send to Pi
   String temp_data;  // temporary data holder for each sensor
   String pi_command; // command from Pi to do something
 
   String deviceName = "MajorTomLight";
 
-  // wait for instruction from Pi
+  // check for instruction from Pi
   if (Serial.available() > 0)
   {
+    // read in instruction
     while(Serial.available() > 0)
     {
       pi_command.concat((char)Serial.read());  
@@ -139,7 +153,8 @@ void loop() {
     else if (pi_command.equalsIgnoreCase("DATA"))
     {
       // Pi has asked for new sensor data 
-      // this will instruct each sensor thread to measure and save its data
+      
+      // This will instruct each sensor thread to measure and save its data
       controller.run();
     
       // get the current time
@@ -164,12 +179,14 @@ void loop() {
 
       if (doTelemetry) {
       
-        String dataStr = pi_command.substring(2);  // remove TX from string, might not want to do this
+        String dataStr = pi_command.substring(2);  // remove TX from string
 
+        // convert data from string to character array
         int len_data = dataStr.length() + 1;
         char radiopacket[len_data];
         dataStr.toCharArray(radiopacket, len_data);
 
+        // send data to the ground
         rf95.send((uint8_t *)radiopacket, len_data);
         rf95.waitPacketSent();
       }
@@ -201,6 +218,7 @@ void loop() {
       // save to command list
       ground_commands.concat(String((char*)buf));
     }
+    // append signal strength
     ground_commands.concat(String(rf95.lastRssi()));
     ground_commands.concat(",");
   }

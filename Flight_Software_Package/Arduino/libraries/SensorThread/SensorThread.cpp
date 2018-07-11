@@ -1,9 +1,19 @@
+/*
+ * file: SensorThread.cpp
+ *
+ * Implementation of the SensorThread library with customized classes
+ *   for each sensor connected to the arduino.
+ */
+
 #include "SensorThread.h"
 #include <Wire.h>
 
+// Generic function for sampling from a sensor
 void SensorThread::run() {
+    // Call the sensor specific function to save data in sensorData
     readFromSensor();
 
+    // The Arduino Thread library requires this line at the end of run()
     runned();
 }
 
@@ -117,11 +127,13 @@ void IMUSensorThread::readFromSensor() {
     if (Wire.requestFrom(0x28, 1, true) && IMUactive)
         IMUactive = true;
     else if (Wire.requestFrom(0x28, 1, true) && !IMUactive){
+        // Detected IMU after a disconnection or power failure
         // Reinitialise IMU here
         *bnoPtr = Adafruit_BNO055(55);
         IMUactive = bnoPtr->begin();
     }
     else if (!Wire.requestFrom(0x28, 1, true))
+        // Detected that IMU is not connected
         IMUactive = false;
 
     // Put IMU data acquisition code here and save result in sensorData
@@ -149,7 +161,6 @@ void IMUSensorThread::readFromSensor() {
         sensorData.concat(",,,,,,,,,,,,,,,,,,,,,,,,,,");
     }
 }
-
 
 String IMUSensorThread::getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type,
                                String title) {
@@ -184,6 +195,7 @@ volatile int GeigerSensorThread::m_interruptPin[] = {0, 0};
 volatile uint16_t GeigerSensorThread::m_eventCount[] = {0, 0, 0};
 volatile unsigned long GeigerSensorThread::m_eventTime[] = {0, 0};
 
+// initialize geiger counter thread with the values of the interrupt pins each sensor is connected to
 GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2) : SensorThread::SensorThread("GEIGER", "C1,C2,SC") {
     m_interruptPin[0] = interruptPin1;
     m_interruptPin[1] = interruptPin2;
@@ -200,7 +212,9 @@ GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2) : S
 }
 
 void GeigerSensorThread::readFromSensor() {
-    // save counts to sensor data
+    // Save counts to sensor data
+    // The main program in arduino_thread_controller.ino will use a timestamp to determine the 
+    // duration of this sampling period.
     sensorData = "";
     sensorData.concat(String(m_eventCount[0]));
     sensorData.concat(",");
@@ -208,20 +222,25 @@ void GeigerSensorThread::readFromSensor() {
     sensorData.concat(",");
     sensorData.concat(String(m_eventCount[2]));
 
+    // Reset counts
     m_eventCount[0] = 0;
     m_eventCount[1] = 0;
     m_eventCount[2] = 0;
 }
 
+// Interrupt Service Routine for a count event
 void GeigerSensorThread::ISR1() {
     m_eventTime[0] = micros();
     if (m_eventTime[0] - m_eventTime[1] < 50)
     {
+        // Simultaneous count occurred because the other geiger counter
+        // detected a count within the last 50 microseconds
         m_eventCount[2]++;
         m_eventCount[1]--;
     }
     else
     {
+        // Single count detected
         m_eventCount[0]++;
     }
 }
@@ -230,11 +249,13 @@ void GeigerSensorThread::ISR2() {
     m_eventTime[1] = micros();
     if (m_eventTime[1] - m_eventTime[0] < 50)
     {
+        // Simultaneous count detected
         m_eventCount[2]++;
         m_eventCount[0]--;
     }
     else
     {
+        // Single count detected
         m_eventCount[1]++;
     }
 }
