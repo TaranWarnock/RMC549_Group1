@@ -1,4 +1,7 @@
 # RMC 549 Software Repository
+This repository contains the code used by both group 0 (Rocky) and group 1 (Major Tom).
+Given that Major Tom was the payload which flew, the master branch is up to date for this payload.
+To view Rocky's version of the flight software, view the "Rocky" branch which includes the light sensor implementation.
 
 ## Directories
 * Code_Examples - Contains an example of how to use the Arduino Thread library
