@@ -1,9 +1,10 @@
 # RMC 549 Software Repository
 
 ## Directories
-* Code_Examples
-* Flight_Software_Package
-* Ground_Software_Package
-* ID_Broadcast
-* Link_Budget
-* talking_to_sensors
+* Code_Examples - Contains an example of how to use the Arduino Thread library
+* Flight_Software_Package - Contains the software suite for payload data collection, storage, and transmission using a Raspberry Pi and Arduino
+* Ground_Software_Package - Contains the software used by the telemetry ground station
+* ID_Broadcast - Contains python scripts enabling the payload to transmit its IP and data and for a computer to receive this information
+* Link_Budget - Contains python scripts to calculate the APRS and LoRa link budgets
+* Schematics - Contains fritzing PCB schematics
+* talking_to_sensors - Contains development code used in testing and setting up various sensors. This code was later finalized and integrated into the flight software package
