@@ -29,18 +29,11 @@ String ground_commands = "";
 
 // create handlers for IMU and pressure sensor
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
-MPL3115A2 preassure;
-
-// Create handlers for three light sensors connected to the arduino
-TSL2561 tsl0(TSL2561_ADDR_FLOAT);
-TSL2561 tsl1(TSL2561_ADDR_LOW);
-TSL2561 tsl2(TSL2561_ADDR_HIGH);
 
 // create thread for each sensor
 SensorThread* gps_thread = new GPSSensorThread();
-SensorThread* imu_thread = new IMUSensorThread(&bno, &preassure);
+SensorThread* imu_thread = new IMUSensorThread(&bno);
 SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
-SensorThread* photo_thread = new PhotoSensorThread(&tsl0, &tsl1, &tsl2);
 
 // create controller to hold the threads
 ThreadController controller = ThreadController();
@@ -48,7 +41,6 @@ ThreadController controller = ThreadController();
 // booleans to check if sensors should be run
 bool doIMU;
 bool doTelemetry;
-bool doPhoto;
 
 void setup() {
   // put your setup code here, to run once:
@@ -74,34 +66,6 @@ void setup() {
     // could send an error message to the Pi here
   }
 
-  // Initialize all photosensors with a gain of 0 and an integration time of 13ms
-  // Initialize photosensor 0
-  doPhoto = tsl0.begin();
-  if(!doPhoto) {
-    // error?
-  }
-  tsl0.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
-  tsl0.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
-  // Initialize 2nd photosensor 1
-  doPhoto = doPhoto && tsl1.begin();
-  if(!doPhoto) {
-    // error?
-  }
-  tsl1.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
-  tsl1.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
-  // Initialize the photosensor 2
-  doPhoto = doPhoto && tsl2.begin();
-  if(!doPhoto) {
-    // error?
-  }
-  tsl2.setGain(TSL2561_GAIN_0X);                 // set no gain (for bright situations)
-  tsl2.setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
-
-  // Initialize the pressure sensor
-  preassure.setModeBarometer();     // Measure pressure in Pascals from 20 to 110 kPa
-  preassure.setOversampleRate(7);   // Set Oversample to the recommended 128
-  preassure.enableEventFlags();     // Enable all three pressure and temp event flags 
-
   // Initialize telemetry
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
@@ -125,7 +89,6 @@ void setup() {
   controller.add(gps_thread);
   controller.add(imu_thread);
   controller.add(geiger_thread);
-  controller.add(photo_thread);
 }
 
 void loop() {
@@ -135,7 +98,7 @@ void loop() {
   String temp_data;  // temporary data holder for each sensor
   String pi_command; // command from Pi to do something
 
-  String deviceName = "RockyFeatherOne";
+  String deviceName = "MajorTomLight";
 
   // check for instruction from Pi
   if (Serial.available() > 0)

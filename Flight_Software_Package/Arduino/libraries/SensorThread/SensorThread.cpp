@@ -122,8 +122,6 @@ void GPSSensorThread::readFromSensor() {
 }
 
 void IMUSensorThread::readFromSensor() {
-    // address of IMU may also be 0x07
-    uint8_t id =  IMUSensorThread::read8bit(0x28, 0x00);
     sensorData = "";
 
     if (Wire.requestFrom(0x28, 1, true) && IMUactive)
@@ -158,58 +156,10 @@ void IMUSensorThread::readFromSensor() {
         sensorData.concat(String(temp));
         sensorData.concat(",");
         sensorData.concat(displayCalStatus());
-        sensorData.concat(",");
     }
     else{
         sensorData.concat(",,,,,,,,,,,,,,,,,,,,,,,,,,");
     }
-
-
-    if (Wire.requestFrom(0x60, 1, true) && pressureActive)
-        IMUactive = true;
-    else if (Wire.requestFrom(0x60, 1, true) && !pressureActive){
-        // Reinitialise pressure sensor here
-        preassurePtr->setModeBarometer(); // Measure pressure in Pascals from 20 to 110 kPa
-        preassurePtr->setOversampleRate(7); // Set Oversample to the recommended 128
-        preassurePtr->enableEventFlags(); // Enable all three pressure and temp event flags
-
-        pressureActive = true;
-    }
-    else if (!Wire.requestFrom(0x60, 1, true))
-        pressureActive = false;
-
-
-    if (pressureActive){
-        sensorData.concat(preassurePtr->readPressure());
-        sensorData.concat(",");
-        sensorData.concat(preassurePtr->readTemp());
-    }
-    else {
-        sensorData.concat(",");
-    }
-}
-
-
-byte IMUSensorThread::read8bit(byte address, byte ID){
-    byte value = 0;
-
-    Wire.beginTransmission(address);    // begin I2C transmission with address
-    #if ARDUINO >= 100                  // version of arduino IDE, ours will be > 100 as it is the newest version
-        Wire.write((uint8_t)ID);        // queue bytes for transmission
-    #else
-        Wire.send(ID);
-    #endif
-
-    Wire.endTransmission();             // end transmission to slave device
-    Wire.requestFrom(address, (byte)1); // request bytes from slave device
-
-    #if ARDUINO >= 100
-        value = Wire.read();            // read byte transmitted by slave device
-    #else
-        value = Wire.receive();
-    #endif
-
-    return value;
 }
 
 String IMUSensorThread::getvec(Adafruit_BNO055::adafruit_vector_type_t sensor_type,
@@ -309,49 +259,3 @@ void GeigerSensorThread::ISR2() {
         m_eventCount[1]++;
     }
 }
-
-// initialize the photosensor thread with handles to three different photosensors
-PhotoSensorThread::PhotoSensorThread(TSL2561* tslPtr0, TSL2561* tslPtr1, TSL2561* tslPtr2) : SensorThread::SensorThread("PHOTO", "VIS0,IR0,VIS1,IR1,VIS2,IR2") {
-    m_tslPtr[0] = tslPtr0;
-    m_tslPtr[1] = tslPtr1;
-    m_tslPtr[2] = tslPtr2;
-}
-
-void PhotoSensorThread::readFromSensor() {
-    // Read in the values from 3 photosensors connected to the arduino.
-    // The method getFullLuminosity() returns a 32 bit value where the
-    // top 16 bits provide the IR luminosity and the bottom 16 bits
-    // provide the full (visible + infrared) spectrum. Follows the
-    // example at https://github.com/adafruit/TSL2561-Arduino-Library/blob/master/examples/tsl2561/tsl2561.ino
-
-    uint32_t lum0, lum1, lum2;
-    uint16_t ir0, ir1, ir2, full0, full1, full2;
-
-    lum0 = m_tslPtr[0]->getFullLuminosity();
-    ir0 = lum0 >> 16;       // shift by 16 bits to get IR
-    full0 = lum0 & 0xFFFF;  // do AND operation with bit mask "0000 0000 0000 0000 1111 1111 1111 1111" to get full spectrum
-    // to get the visible portion we would do vis0 = full0 - ir0
-
-    lum1 = m_tslPtr[1]->getFullLuminosity();
-    ir1 = lum1 >> 16;
-    full1 = lum1 & 0xFFFF;
-
-    lum2 = m_tslPtr[2]->getFullLuminosity();
-    ir2 = lum2 >> 16;
-    full2 = lum2 & 0xFFFF;
-
-    // create data string
-    sensorData = "";
-    sensorData.concat(String(full0));
-    sensorData.concat(",");
-    sensorData.concat(String(ir0));
-    sensorData.concat(",");
-    sensorData.concat(String(full1));
-    sensorData.concat(",");
-    sensorData.concat(String(ir1));
-    sensorData.concat(",");
-    sensorData.concat(String(full2));
-    sensorData.concat(",");
-    sensorData.concat(String(ir2));
-}
-

@@ -22,7 +22,6 @@ if __name__ == "__main__":
     Logging_Thread              = Logger()
     Serial_Communication_Thread = SerialCommunication(Logging_Thread, [photo_sensor_one,
                                                                        photo_sensor_two,
-
                                                                        photo_sensor_three])
     Telemetry_Thread            = Telemetry(Logging_Thread,
                                             Serial_Communication_Thread)

@@ -4,31 +4,47 @@ from Common.FSW_Common import *
 class SerialCommunication(FlightSoftwareParent):
     """
     This class is designed to handle generic serial communication for the RMC 549 balloon(s).
+    There is an enforced "call and respond" scheme but it can be intentionally circumvented by when needed.
+
+    The i2c photosensors are handled by this class as well. It is not a elegant way of integrating the sensors code wise
+    but it was the quickest so it was done due to time constraints.
 
     Written by Daniel Letros, 2018-06-27
     """
 
     def __init__(self, logging_object: Logger, list_of_photosensors: list) -> None:
+        """
+        Init of class.
 
-        # Serial_communication class will handle the data acq from the i2c pi sensors
+        Written by Daniel Letros, 2018-06-27
+
+        :param logging_object: Reference to logging object.
+        :param list_of_photosensors: List of photosensors.
+        """
+        # Serial_communication class will handle the data acq from the i2c pi sensors.
+        # If they are good load them up to be queued on data calls.
         self.list_of_photosensors = []
         for sensor in list_of_photosensors:
             if sensor.sensor_is_valid:
                 self.list_of_photosensors.append(sensor)
 
-        self.default_buadrate = 9600
-        self.default_timeout   = 8
-        self.main_delay        = 0.5
-        self.reconnection_wait = 5
-        self.arduino_reset_pin = 23
-        super().__init__("SerialCommunication", logging_object)
+        self.default_buadrate  = 9600  # Buadrate of the serial communication.
+        self.default_timeout   = 8     # Default time out on serial communication calls.
+        self.main_delay        = 0.5   # Main delay for the thread.
+        self.reconnection_wait = 5     # Time to wait when attempting a reconnection if something is wrong.
+        self.arduino_reset_pin = 23    # A BCM layout pi pin which can trigger a power cycle on the arduino.
 
+        super().__init__("SerialCommunication", logging_object) # Run parent init.
+
+        # Keep track of active serial ports and if they have a problem or not.
         self.port_list        = dict()
         self.ports_are_good   = False
 
+        # Locks so different threads won't try to access the same variable at the same time.
         self.serial_mutex          = threading.Lock()  # General lock on serial communication
         self.uplink_commands_mutex = threading.Lock()  # Lock on accessing and using uplink commands
 
+        # Keeps track uplink commands and if they have been processed.
         self.last_uplink_commands_valid         = False
         self.last_uplink_seen_by_system_control = False
         self.last_uplink_commands               = [""]
@@ -93,11 +109,11 @@ class SerialCommunication(FlightSoftwareParent):
             self.port_list[port].close()
         self.port_list.clear()
 
-        # Determine ports on current OS
+        # Determine ports on current OS.
         if sys.platform.startswith('win'):
             ports = ['COM%s' % (i + 1) for i in range(256)]
         elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-            # this excludes your current terminal "/dev/tty"
+            # this excludes your current terminal "/dev/tty".
             ports = glob.glob('/dev/tty[A-Za-z]*')
         elif sys.platform.startswith('darwin'):
             ports = glob.glob('/dev/tty.*')
@@ -106,6 +122,7 @@ class SerialCommunication(FlightSoftwareParent):
 
         result = []
         for port in ports:
+            # Try opening port. If fail ignore it, else add it.
             try:
                 s = serial.Serial(port)
                 s.close()
@@ -113,10 +130,10 @@ class SerialCommunication(FlightSoftwareParent):
             except (OSError, serial.SerialException):
                 pass
 
-        # Open ports
+        # Open ports.
         if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
             try:
-                result.remove('/dev/ttyAMA0')  # AMA0 seems to be always "active" as is the Pi's PL011, ignore.
+                result.remove('/dev/ttyAMA0')  # AMA0 seems to be always "active" as is the Pi's PL011, remove it.
             except:
                 self.log_error("Could not remove [/dev/ttyAMA0] from port list.")
         for port in result:
@@ -133,14 +150,18 @@ class SerialCommunication(FlightSoftwareParent):
         """
         This function will read data on the port up to a EOL char and return it.
 
+        If the expected information to be read in is science data then append the i2c photosensor stuff
+        onto it.
+
         Written by Daniel Letros, 2018-06-27
 
-        :param port: port to do the communication over
+        :param port: port to do the communication over.
         :param type: type of data expected, dictated which file it is logged to.
         :return: None
         """
         self.start_function_diagnostics("readline_from_serial")
         try:
+            # Read in data and strip it of unwanted chars.
             new_data = self.port_list[port].readline().decode('utf-8').strip()
             new_data = new_data.replace("\n", "")
             new_data = new_data.replace("\r", "")
@@ -149,23 +170,22 @@ class SerialCommunication(FlightSoftwareParent):
                 self.reset_serial_connection()
                 return
             elif type == "DATA":
-
-                # Try to rapid get sensor data. Should be multithreaded for
+                # Try to get sensor data quickly. Should be multithreaded for
                 # max time resolution but this has to be quick and dirty right now.
                 current_sensor_data   = []
                 for sensor in self.list_of_photosensors:
                     if sensor.sensor_is_valid:
                         current_sensor_data.append(sensor._get_data())
-                # Append Pi photo sensor data if valid
+                # Append Pi photo sensor data if valid.
                 for data in current_sensor_data:
-                    # Valid photo sensor so append the header information
+                    # Valid photo sensor so append the header information.
                     if new_data[-1] != ",":
-                        # Append ',' if not there at end
+                        # Append ',' if not there at end.
                         new_data += ","
                     new_data += str(data[0])
                     new_data += ","
                     new_data += str(data[1])
-                # remove ',' at end if needed
+                # remove ',' at end if needed.
                 if new_data[-1] == ",":
                     new_data = new_data[0:-1]
 
@@ -174,15 +194,15 @@ class SerialCommunication(FlightSoftwareParent):
                 self.log_id(new_data)
             elif type == "HEADER":
 
-                # Append Pi photo sensor data if valid
+                # Append Pi photo sensor data if valid.
                 for sensor in self.list_of_photosensors:
                     if sensor.sensor_is_valid:
-                        # Valid photo sensor so append the header information
+                        # Valid photo sensor so append the header information.
                         if new_data[-1] != ",":
-                            # Append ',' if not there at end
+                            # Append ',' if not there at end.
                             new_data += ","
                         new_data += sensor.data_header_addition
-                    # remove ',' at end if needed
+                    # remove ',' at end if needed.
                     if new_data[-1] == ",":
                         new_data = new_data[0:-1]
                 new_data = "PiTS," + new_data
@@ -191,7 +211,7 @@ class SerialCommunication(FlightSoftwareParent):
                 self.log_tx_event(new_data)
             elif type == "RX" and new_data != "":
                 self.log_rx_event(new_data)
-                # Assume uplink commands will be a comma delimited list joined in one string
+                # Assume uplink commands will be a comma delimited list joined in one string.
                 with self.uplink_commands_mutex:
                     self.last_uplink_commands               = new_data.split(',')
                     self.last_uplink_commands_valid         = True
@@ -284,11 +304,14 @@ class SerialCommunication(FlightSoftwareParent):
         :return: None
         """
         self.start_function_diagnostics("reset_serial_connection")
+        # Something is wrong. Wait for some data transition to get stable.
         time.sleep(self.reconnection_wait)
         if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
+            # Do power cycle pin for arduino.
             GPIO.output(self.arduino_reset_pin, GPIO.LOW)
             time.sleep(self.reconnection_wait/2)
             GPIO.output(self.arduino_reset_pin, GPIO.HIGH)
+        # Do a full communication reset in this software.
         self.ports_are_good          = False
         self.read_request_buffer     = []
         self.write_request_buffer    = []
@@ -312,6 +335,5 @@ class SerialCommunication(FlightSoftwareParent):
                     self.expect_read_after_write = True
             except Exception as err:
                 self.log_error("Main function error [%s]" % str(err))
-                # self.reset_serial_connection()
             time.sleep(self.main_delay)
         print("%s << %s << Exiting Thread" % (self.system_name, self.class_name))

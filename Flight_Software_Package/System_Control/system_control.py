@@ -9,25 +9,37 @@ class SystemControl(FlightSoftwareParent):
     """
 
     def __init__(self, logging_object: Logger, serial_object: SerialCommunication) -> None:
-        self.main_delay        = 0.05
-        self.buffering_delay   = 0.05
-        self.cutoff_pin_bcm    = 18
-        self.cutoff_time_high  = 5
+        """
+        Init of class.
+
+        Written by Daniel Letros, 2018-07-03
+
+        :param logging_object: Reference to logging object
+        :param serial_object: Reference to serial object
+        """
+        self.main_delay        = 0.05                        # Main thread delay
+        self.buffering_delay   = 0.05                        # A time delay for parts of code. Used mostly to debug.
+        self.cutoff_pin_bcm    = 18                          # Pi pin in BCM layout which triggers the cutoff.
+        self.cutoff_time_high  = 5                           # How long the cutoff trigger will remain high.
+        # Declare some default cutoff conditions.
         self.cutoff_conditions = dict()
-        self.cutoff_conditions['gps_altitude'] = [30]
-        self.cutoff_conditions['gps_lat']      = [22, 23]
-        self.cutoff_conditions['gps_lon']      = [24, 25]
-        self.cutoff_conditions['time']         = ["12:34"]
-        super().__init__("SystemControl", logging_object)
-        self.serial_object = serial_object
+        self.cutoff_conditions['gps_altitude'] = [30]      # Altitude condition will cut if rises to or above level.
+        self.cutoff_conditions['gps_lat']      = [22, 23]  # Latitude defines max/min limits which will cut if crossed.
+        self.cutoff_conditions['gps_lon']      = [24, 25]  # Longitude defines max/min limits which will cut if crossed.
+        self.cutoff_conditions['time']         = ["12:34"] # Clock time which will trigger a cut.
 
-        self.board_ID    = None
-        self.data_header = None
+        super().__init__("SystemControl", logging_object)  # Run init of parent.
+        self.serial_object = serial_object                 # Reference to serial object.
 
-        self.has_already_cut_payload = False
-        self.good_altitude_count     = 0
+        self.board_ID    = None  # ID line from arduino board
+        self.data_header = None  # Header line from arduino
 
-        # Rewrite time cutoff condition as a datetime object
+        self.has_already_cut_payload = False # Keeps track if payload is cut.
+        self.good_altitude_count     = 0     # Since altitude can be noisy there is a count of how many consecutive
+                                             # altitude readings agree with being >= the cutoff limit. This keeps track
+                                             # of that count.
+
+        # Rewrite time cutoff condition as a datetime object instead of a string clock time.
         temp_time = datetime.datetime.utcnow().strftime("%Y%m%d_")
         temp_time = temp_time + self.cutoff_conditions['time'][0].split(':')[0] + ":" + \
                     self.cutoff_conditions['time'][0].split(':')[1]
@@ -62,24 +74,33 @@ class SystemControl(FlightSoftwareParent):
     def check_id_and_headers(self) -> None:
         """
         This function just looks into the log file for the most recent header and data logging lines.
-        This might not be the most efficient way of doing it either, it could take a lot of time.
+        This might not be the most efficient way of doing it, it could take a lot of time.
+
+        Written by Daniel Letros, 2018-07-06
 
         :return: None
         """
         self.start_function_diagnostics("check_id_and_headers")
+        # Keep track of found files.
         found_id     = False
         found_header = False
+        # Read in whole file.
         with open(self.logger.notifications_log_path, 'r') as f:
             content = f.readlines()
+        # Loop through file in reverse to get newest lines and check if found a header or ID file.
         for line_idx in range(len(content)-1, -1, -1):
             if found_id and found_header:
+                # Found both, don't need to look anymore, break.
                 break
             if content[line_idx].split("<<")[0].strip().lower() == 'id':
+                # Found newest ID line, save it.
                 found_id = True
                 self.board_ID = content[line_idx].split("<<")[-1].strip()
             if content[line_idx].split("<<")[0].strip().lower() == 'header':
+                # Found newest header line, save it.
                 found_header     = True
                 self.data_header = content[line_idx].split("<<")[-1].strip()
+        # Declare header/ID none if not found.
         if not found_header:
             self.data_header = None
         if not found_id:
@@ -102,6 +123,8 @@ class SystemControl(FlightSoftwareParent):
         with self.serial_object.uplink_commands_mutex:
             commands_to_remove_and_use = []
             for command in self.serial_object.last_uplink_commands:
+                # "cut the mofo" = cut the payload.
+                # "send header"  = ask the payload for list of data headers
                 if command.lower() == 'cut the mofo' or command.lower() == 'send header':
                     commands_to_remove_and_use.append(command)
             for command in commands_to_remove_and_use:
@@ -131,14 +154,14 @@ class SystemControl(FlightSoftwareParent):
         """
         This function will check for the automatic payload cutoff conditions.
 
+        Written by Daniel Letros, 2018-07-06
 
         :return: True if payload should be cut
         """
         self.start_function_diagnostics("check_auto_cutoff_conditions")
-        should_cut = False
+        should_cut = False # declare false, will only be set to true if conditions is met.
         if self.system_name == 'MajorTom' or self.system_name == 'Rocky':
-            # try:
-            # Check Pi timestamp
+            # Check Pi timestamp against cutoff timestamp.
             try:
                 if (self.cutoff_conditions['time'][0] - datetime.datetime.utcnow()).total_seconds() <= 0:
                     should_cut = True
@@ -146,14 +169,20 @@ class SystemControl(FlightSoftwareParent):
             except Exception as err:
                 self.log_error("Error checking for Pi timestamp payload cutoff [%s]" % str(err))
 
-            # Check GPS if Pi time says don't do it yet
+            # Check GPS conditions if Pi timestamp did not trigger it already.
             if self.data_header is not None and not should_cut and self.serial_object.ports_are_good:
+                # Get a list of data and data header. Search through the data header to find where in the data line
+                # the appropriate information is kept.
                 last_data_line = self.read_last_line_in_data_log().split(',')
                 header_list    = self.data_header.split(',')
-                col_count = 0
-                have_gps_sat_lock = False
+                col_count      = 0
+                have_gps_sat_lock = False  # This is a check to see if GPS data is good. The check is needed since the
+                                           # GPS will store and report its last known good location if it does not
+                                           # have a lock. If it does not have a lock then the invalid location is
+                                           # ignored.
                 for header in header_list:
                     if header == "Nsat":
+                        # Check for good GPS as defined by 4 or more satellites being used.
                         try:
                             n_sat = float(last_data_line[col_count])
                             if n_sat >= 4:
@@ -164,7 +193,7 @@ class SystemControl(FlightSoftwareParent):
                         except Exception as err:
                             self.log_error("Error checking for GPS sat lock [%s]" % str(err))
                     elif header == "UTC":
-                        # Check GPS Timestamp
+                        # Check GPS timestamp against clock cutoff.
                         try:
                             gps_HHMMSS = str(last_data_line[col_count])
                             # reformat into datetime
@@ -178,6 +207,7 @@ class SystemControl(FlightSoftwareParent):
                         except Exception as err:
                             self.log_error("Error checking for GPS timestamp payload cutoff [%s]" % str(err))
                     elif header == "LtDgMn":
+                        # Check for latitude boundaries.
                         try:
                             deci_deg    = self.convert_NEMA_to_deci(str(last_data_line[col_count]))
                             if deci_deg >= np.max(self.cutoff_conditions['gps_lat']) or \
@@ -189,6 +219,7 @@ class SystemControl(FlightSoftwareParent):
                         except Exception as err:
                             self.log_error("Error checking for GPS latitude payload cutoff [%s]" % str(err))
                     elif header == "LnDgMn":
+                        # Check for longitude boundaries.
                         try:
                             deci_deg = self.convert_NEMA_to_deci(str(last_data_line[col_count]))
                             if deci_deg >= np.max(self.cutoff_conditions['gps_lon']) or \
@@ -200,16 +231,18 @@ class SystemControl(FlightSoftwareParent):
                         except Exception as err:
                             self.log_error("Error checking for GPS longitude payload cutoff [%s]" % str(err))
                     elif header == "Alt":
+                        # Check for altitude boundaries.
                         try:
                             altitude        = float(last_data_line[col_count])
                             alt_units       = None
                             alt_units_count = 0
                             for header in header_list:
+                                # Check altitude units. Assume km if they are not defined as m.
                                 if header == 'Altu':
                                     alt_units = str(last_data_line[alt_units_count])
                                 alt_units_count += 1
                             if alt_units == "M":
-                                # Convert to km
+                                # Convert to km if in m.
                                 altitude /= 1000
                             if altitude >= self.cutoff_conditions['gps_altitude'][0]:
                                 self.good_altitude_count += 1
@@ -221,13 +254,9 @@ class SystemControl(FlightSoftwareParent):
                         except Exception as err:
                             self.log_error("Error checking for GPS altitude cutoff [%s]" % str(err))
                     col_count += 1
-                should_cut = should_cut and have_gps_sat_lock
+                should_cut = should_cut and have_gps_sat_lock  # only have GPS cutoff if GPS data is good.
                 if not have_gps_sat_lock:
                     self.good_altitude_count = 0
-            else:
-                pass
-            # except Exception as err:
-            #     self.log_error("Error [%s]" % str(err))
         self.end_function_diagnostics("check_auto_cutoff_conditions")
         return should_cut
 
@@ -244,7 +273,7 @@ class SystemControl(FlightSoftwareParent):
         print("%s << %s << Starting Thread" % (self.system_name, self.class_name))
         while self.should_thread_run:
             try:
-                self.check_id_and_headers()
+                self.check_id_and_headers()  # Update ID and header information
 
                 # Check for any uplink commands
                 if self.serial_object.last_uplink_commands_valid:
@@ -254,6 +283,7 @@ class SystemControl(FlightSoftwareParent):
                             try:
                                 if (self.system_name == 'MajorTom' or self.system_name == 'Rocky') \
                                         and not self.has_already_cut_payload:
+                                    # Ground said cut the payload so do it.
                                     self.log_info("Cutting payload form uplink command.")
                                     GPIO.output(self.cutoff_pin_bcm, GPIO.HIGH)
                                     time.sleep(self.cutoff_time_high)
@@ -266,14 +296,14 @@ class SystemControl(FlightSoftwareParent):
                             if self.serial_object.ports_are_good:
                                 for port in self.serial_object.port_list:
                                     with self.serial_object.serial_mutex:
-                                        # send down the last known header file
+                                        # send down the last known header file.
                                         time.sleep(self.buffering_delay)
                                         self.serial_object.write_request_buffer.append([port, "TX{%s" % self.data_header])
                                         time.sleep(self.buffering_delay)
                                         self.serial_object.read_request_buffer.append([port, "TX"])
                                         time.sleep(self.buffering_delay)
 
-                # Check for other automatic cutoff conditions based off of data line
+                # Check for other automatic cutoff conditions based off of data line.
                 if self.check_auto_cutoff_conditions():
                     try:
                         if (self.system_name == 'MajorTom' or self.system_name == 'Rocky') \

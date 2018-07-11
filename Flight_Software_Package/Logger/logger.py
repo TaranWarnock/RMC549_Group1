@@ -18,26 +18,35 @@ class Logger(threading.Thread):
     Written by Daniel Letros, 2018-06-27
     """
     def __init__(self):
+        """
+        Init function of the logger class.
+
+        Written by Daniel Letros, 2018-06-27
+        """
         super().__init__()
-        self.log_file_path           = None
-        self.notifications_log_path  = None
-        self.data_log_path           = None
-        self.main_delay              = None
+        self.log_file_path           = None  # Path to where all the log files are stored.
+        self.notifications_log_path  = None  # Path to where the notification file for today is stored.
+        self.data_log_path           = None  # Path to where the data file for today is stored.
+        self.main_delay              = None  # Thread delay time.
 
-        self.should_thread_run       = True
-        self.log_file_verbose        = False
-        self.run_logger_diagnostics  = False
+        self.should_thread_run       = True  # Should thread be running.
+        self.log_file_verbose        = False # Should print log file activity to console.
 
+        # Diagnostic variables
+        self.run_logger_diagnostics                   = False
         self.current_logger_diagnostics_function_name = None
         self.function_logger_diagnostics_start_time   = None
         self.function_logger_diagnostics_end_time     = None
 
-        self.class_name  = "Logger"
-        self.system_name = socket.gethostname()
+        self.class_name  = "Logger"             # Class name for logger
+        self.system_name = socket.gethostname() # System name for logger
 
-        self.notifications_logging_buffer = []
-        self.data_logging_buffer          = []
+        self.notifications_logging_buffer = []  # Buffer of information to be logged to the notifications file.
+        self.data_logging_buffer          = []  # Buffer of information to be logged to the data file.
 
+        # Checks for current operating system and defines paths to configuration file. Linux path needs to be absolute
+        # since the method of starting the program on pi power up needs absolute path for the proper file to be found.
+        # Running the program through pycharm or manually through a terminal does not need absolute paths.
         if platform == "linux" or platform == "linux2":
             self.yaml_config_path = '/home/pi/RMC549Repos/RMC549_Group1/Flight_Software_Package/Config/master_config.yaml'
         elif platform == "darwin":
@@ -86,6 +95,8 @@ class Logger(threading.Thread):
 
         :return: None
         """
+        # Follow the main logging path and then make a timestamped folder in there for the current day.
+        # Within the current day's folder, make two timestamped files for the day - notifications and data.
         timestamp = datetime.datetime.utcnow().strftime("%Y%m%d")
         self.log_file_path += os.sep + timestamp
         self.notifications_log_path = self.log_file_path + os.sep + timestamp + "_notifications.txt"
