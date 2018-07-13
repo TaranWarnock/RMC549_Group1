@@ -1,3 +1,16 @@
+'''
+file: serial_communication.py
+Created by: Curtis Puetz 2018-07-08
+
+note to users:
+
+1) you must hard code in the location you want to SAVE your log files within the
+instantiate_and_write_to_log_files() function on the line:
+log_file_path = r"C:\\Users\puetz\Desktop\Telemtry_logs"
+
+2) the 'check_for_data_delay' should be a little bit faster than the rate of
+data sent from the arduino/balloon (right now is comes down about every 9 seconds
+'''
 import sys
 import glob
 import serial
@@ -164,18 +177,8 @@ def make_uplink_cmd(port_list, port):
         elif the_input == "send header":
             write_to_serial(port_list, port, "send header,"); instantiate_and_write_to_log_files("Uplink: send header")
 
-'''
-note to users: 
-
-1) you must hard code in the location you want to SAVE your log files within the 
-instantiate_and_write_to_log_files() function on the line:
-log_file_path = r"C:\\Users\puetz\Desktop\Telemtry_logs"
-
-2) the 'check_for_data_delay' should be a little bit faster than the rate of 
-data sent from the arduino/balloon (right now is comes down about every 9 seconds
-'''
 if __name__ == "__main__":
-    check_for_data_delay = 3  # note to self: go a little bit faster than the rate of data sent from the arduino
+    check_for_data_delay = 7  # note to self: go a little bit faster than the rate of data sent from the arduino
     port_list = dict()
     new_port_list, new_port = find_serial_ports(9600, 0, port_list)
     t1 = threading.Thread(target=continuous_read_data, args=(check_for_data_delay, new_port_list, new_port))

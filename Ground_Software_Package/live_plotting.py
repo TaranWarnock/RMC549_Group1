@@ -1,3 +1,28 @@
+'''
+file: live_plotting.py
+Created by: Curtis Puetz 2018-07-08
+
+note to users:
+
+1) you must hard code in the location you want to LOAD from your log files within the
+read_last_line_in_data_log() function on the line:
+log_file_path = r"C:\\Users\puetz\Desktop\Telemtry_logs"
+
+2) the 'plot_pause_for_interactive' variable should be a little bit faster than the rate of
+data being written to the log files in serial_communication.py (i.e. 'check_for_data_delay'
+variable). It can easily be 1 second. This allows for CPU usage to remain low, since the program
+does not check the log file as often.
+
+3) you must be generating data for this program to do anything. So either serial_communication.py
+needs to be running and recieving data from the balloon, or generate_dummy_logs.py needs to be
+running to generate artifical data. In the latter, a text file needs to be supplied to
+generate_dummy_logs.py with reasonable data, and the log_file_paths in both 'generate_dummy_logs.py'
+and this program need to be appropriate.
+
+4) the png files used for the longitude latitude maps needs to be set to your location (you also
+need to generate the constrains of the picture manually)
+'''
+
 import datetime
 import os
 import numpy as np
@@ -251,7 +276,7 @@ def plot_data(data, header_data):
         long = -(int(data_dict['LnDgMn']/100) + (data_dict['LnDgMn'] - int(data_dict['LnDgMn']/100)*100)/60)
         index_y = np.interp(lat, np.linspace(bottom_lat, top_lat, len(img)), np.arange(0, len(img))[::-1])
         index_x = np.interp(long, np.linspace(left_long, right_long, len(img[0])), np.arange(0, len(img[0])))
-        plt.scatter(index_x, index_y, color='blue', s=20)
+        plt.scatter(index_x, index_y, color='red', s=20)
         # large wingham
         plt.figure(7)
         left_long = -82.1237
@@ -262,7 +287,7 @@ def plot_data(data, header_data):
         long = -(int(data_dict['LnDgMn']/100) + (data_dict['LnDgMn'] - int(data_dict['LnDgMn']/100)*100)/60)
         index_y = np.interp(lat, np.linspace(bottom_lat, top_lat, len(img_large)), np.arange(0, len(img_large))[::-1])
         index_x = np.interp(long, np.linspace(left_long, right_long, len(img_large[0])), np.arange(0, len(img_large[0])))
-        plt.scatter(index_x, index_y, color='blue', s=20)
+        plt.scatter(index_x, index_y, color='red', s=20)
     # counts vs time and altitude profiles
     if not data_dict['C1'] == "":
         plot_time_x(data_dict['C1'], 8)
@@ -316,11 +341,11 @@ def read_last_line_in_data_log():
 
     :return: None
     """
-    # timestamp = datetime.datetime.utcnow().strftime("%Y%m%d")
-    # log_file_path = r"C:\Users\puetz\Desktop\Telemtry_logs"
-    # log_file_path += os.sep + timestamp
-    # file_name = log_file_path + os.sep + timestamp + "_data.txt"
-    file_name = r'C:\Users\puetz\Desktop\Telemtry_logs\Test\test.txt' # test generated data
+    timestamp = datetime.datetime.utcnow().strftime("%Y%m%d")
+    log_file_path = r"C:\Users\puetz\Desktop\Telemtry_logs"
+    log_file_path += os.sep + timestamp
+    file_name = log_file_path + os.sep + timestamp + "_data.txt"
+    # file_name = r'C:\Users\puetz\Desktop\Telemtry_logs\Test\test.txt' # test generated data
     # file_name = r'C:\Users\puetz\Desktop\litest.txt'
     try:
         with open(file_name, 'rb') as f:
@@ -333,29 +358,8 @@ def read_last_line_in_data_log():
             content = f.readlines()[-1].decode()
     return content
 
-'''
-note to users: 
-
-1) you must hard code in the location you want to LOAD from your log files within the 
-read_last_line_in_data_log() function on the line:
-log_file_path = r"C:\\Users\puetz\Desktop\Telemtry_logs"
-
-2) the 'plot_pause_for_interactive' variable should be a little bit faster than the rate of 
-data being written to the log files in serial_communication.py (i.e. 'check_for_data_delay'
-variable). It can easily be 1 second. This allows for CPU usage to remain low, since the program
-does not check the log file as often.
-
-3) you must be generating data for this program to do anything. So either serial_communication.py
-needs to be running and recieving data from the balloon, or generate_dummy_logs.py needs to be
-running to generate artifical data. In the latter, a text file needs to be supplied to 
-generate_dummy_logs.py with reasonable data, and the log_file_paths in both 'generate_dummy_logs.py'
-and this program need to be appropriate.
-
-4) the png files used for the longitude latitude maps needs to be set to your location (you also
-need to generate the constrains of the picture manually)
-'''
 if __name__ == '__main__':
-    plot_pause_for_interactive = 1
+    plot_pause_for_interactive = 4
     set_up_plots()
     plt.ion()
     hold = ""
