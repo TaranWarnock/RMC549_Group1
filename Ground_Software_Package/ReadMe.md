@@ -6,11 +6,11 @@ This file is used to communicate with the Arduino (recieving downlink data and s
 
 ## live_plotting.py
 
-This file is used to collected and parse the data from the log .txt files and plot them in real time during the flight for the ground station operators
+This file is used to collected and parse the data from the log .txt files and plot them in real time during the flight for the ground station operators. See documentation within the file for how to operate.
 
 ## generate_dummy_logs.py
 
-This file is used to generate dummy log files for the purpose of running/debuging the live_plotting.py script without actually being connected to a LoRa device and recieving data from another LoRa device. See documentation within the file for how to operate.
+This file is used to generate dummy log files for the purpose of running/debuging the live_plotting.py script without actually being connected to a LoRa device and recieving data from another LoRa device.
 
 ## arduino_ground Folder
 
