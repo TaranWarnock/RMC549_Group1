@@ -1,14 +1,18 @@
-const byte intPin[] = {11, 12};
+const byte intPin[] = {5, 6, 9, 10};
 uint32_t eventCount[] = {0, 0};
 unsigned long eventTime[] = {0, 0};
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(intPin[0], INPUT);
-  pinMode(intPin[1], INPUT);
+  pinMode(intPin[0], INPUT_PULLUP);
+  pinMode(intPin[1], INPUT_PULLUP);
+  pinMode(intPin[2], INPUT_PULLUP);
+  pinMode(intPin[3], INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(intPin[0]), eventDetectGeiger1, FALLING);
-  attachInterrupt(digitalPinToInterrupt(intPin[1]), eventDetectGeiger2, FALLING);
-}
+  attachInterrupt(digitalPinToInterrupt(intPin[1]), eventNoiseGeiger1, FALLING);
+  attachInterrupt(digitalPinToInterrupt(intPin[2]), eventDetectGeiger2, FALLING);
+  attachInterrupt(digitalPinToInterrupt(intPin[3]), eventNoiseGeiger2, FALLING);
+} 
 
 void loop()
 {
@@ -27,19 +31,32 @@ void eventDetectGeiger1()
 {
   eventCount[0]++;
   eventTime[0] = micros();
-//  Serial.print("1: ");
-//  Serial.print(eventCount[0]);
-//  Serial.print(" ");
-//  Serial.println(eventTime[0] - eventTime[1]);
+  // Serial.print("1: ");
+  // Serial.print(eventCount[0]);
+  // Serial.print(" ");
+  // Serial.println(eventTime[0] - eventTime[1]);
+}
+
+void eventNoiseGeiger1()
+{
+  // eventCount[0]--;
+  // eventCount[1]++;
+  // eventTime[0] = micros();
+  Serial.print("Noise Detected from Geiger 1, removing count");
 }
 
 void eventDetectGeiger2()
 {
   eventTime[1] = micros();
   eventCount[1]++;
-//  Serial.print("2: ");
-//  Serial.print(eventCount[1]);
-//  Serial.print(" ");
-//  Serial.println(eventTime[1] - eventTime[0]);
+  // Serial.print("2: ");
+  // Serial.print(eventCount[1]);
+  // Serial.print(" ");
+  // Serial.println(eventTime[1] - eventTime[0]);
 }
 
+void eventNoiseGeiger2()
+{
+  eventCount[1]--;
+  Serial.print("Noise Detected from Geiger 2, removing count");
+}
