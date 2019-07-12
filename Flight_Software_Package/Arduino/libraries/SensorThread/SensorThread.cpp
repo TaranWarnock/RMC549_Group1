@@ -191,24 +191,30 @@ String IMUSensorThread::displayCalStatus(void) {
 }
 
 // define static member variables for Geiger class
-volatile int GeigerSensorThread::m_interruptPin[] = {0, 0};
+volatile int GeigerSensorThread::m_interruptPin[] = {0, 0, 0, 0};
 volatile uint16_t GeigerSensorThread::m_eventCount[] = {0, 0, 0};
 volatile unsigned long GeigerSensorThread::m_eventTime[] = {0, 0};
 
 // initialize geiger counter thread with the values of the interrupt pins each sensor is connected to
-GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2) : SensorThread::SensorThread("GEIGER", "C1,C2,SC") {
+GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2, int interruptPin3, int interruptPin4) : SensorThread::SensorThread("GEIGER", "C1,C2,GN") {
     m_interruptPin[0] = interruptPin1;
     m_interruptPin[1] = interruptPin2;
+    m_interruptPin[2] = interruptPin3;
+    m_interruptPin[3] = interruptPin4;
     m_eventCount[0] = 0;
     m_eventCount[1] = 0;
     m_eventCount[2] = 0;
     m_eventTime[0] = 0;
     m_eventTime[1] = 0;
 
-    pinMode(m_interruptPin[0], INPUT);
-    pinMode(m_interruptPin[1], INPUT);
+    pinMode(m_interruptPin[0], INPUT_PULLUP);
+    pinMode(m_interruptPin[1], INPUT_PULLUP);
+    pinMode(m_interruptPin[2], INPUT_PULLUP);
+    pinMode(m_interruptPin[3], INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(m_interruptPin[0]), &GeigerSensorThread::ISR1, FALLING);
     attachInterrupt(digitalPinToInterrupt(m_interruptPin[1]), &GeigerSensorThread::ISR2, FALLING);
+    attachInterrupt(digitalPinToInterrupt(m_interruptPin[2]), &GeigerSensorThread::ISR3, FALLING);
+    attachInterrupt(digitalPinToInterrupt(m_interruptPin[3]), &GeigerSensorThread::ISR4, FALLING);
 }
 
 void GeigerSensorThread::readFromSensor() {
@@ -228,34 +234,26 @@ void GeigerSensorThread::readFromSensor() {
     m_eventCount[2] = 0;
 }
 
-// Interrupt Service Routine for a count event
+// Interrupt Service Routine for a count event for Geiger Counter 1
 void GeigerSensorThread::ISR1() {
     m_eventTime[0] = micros();
-    if (m_eventTime[0] - m_eventTime[1] < 50)
-    {
-        // Simultaneous count occurred because the other geiger counter
-        // detected a count within the last 50 microseconds
-        m_eventCount[2]++;
-        m_eventCount[1]--;
+    m_eventCount[0]++; // add a count
     }
-    else
-    {
-        // Single count detected
-        m_eventCount[0]++;
-    }
+
+// Interrupt Service Routine for a noise event for Geiger Counter 1
+void GeigerSensorThread::ISR2() {
+    m_eventCount[0]--; // Remove a count as this count was likely noise
+    m_eventCount[2]++;
 }
 
-void GeigerSensorThread::ISR2() {
+// Interrupt Service Routine for a count event for Geiger Counter 2
+void GeigerSensorThread::ISR3() {
     m_eventTime[1] = micros();
-    if (m_eventTime[1] - m_eventTime[0] < 50)
-    {
-        // Simultaneous count detected
-        m_eventCount[2]++;
-        m_eventCount[0]--;
+    m_eventCount[1]++;
     }
-    else
-    {
-        // Single count detected
-        m_eventCount[1]++;
-    }
+
+// Interrupt Service Routine for a noise event for Geiger Counter 2
+void GeigerSensorThread::ISR4() {
+    m_eventCount[1]--;
+    m_eventCount[2]++;
 }

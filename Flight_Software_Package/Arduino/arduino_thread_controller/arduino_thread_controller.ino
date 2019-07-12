@@ -33,7 +33,7 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
 // create thread for each sensor
 SensorThread* gps_thread = new GPSSensorThread();
 SensorThread* imu_thread = new IMUSensorThread(&bno);
-SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
+SensorThread* geiger_thread = new GeigerSensorThread(5, 6, 9, 10);
 
 // create controller to hold the threads
 ThreadController controller = ThreadController();
