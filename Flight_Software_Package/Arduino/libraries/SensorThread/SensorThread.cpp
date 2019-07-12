@@ -7,6 +7,8 @@
 
 #include "SensorThread.h"
 #include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
 
 // Generic function for sampling from a sensor
 void SensorThread::run() {
@@ -193,7 +195,8 @@ String IMUSensorThread::displayCalStatus(void) {
 // define static member variables for Geiger class
 volatile int GeigerSensorThread::m_interruptPin[] = {0, 0, 0, 0};
 volatile uint16_t GeigerSensorThread::m_eventCount[] = {0, 0, 0};
-volatile unsigned long GeigerSensorThread::m_eventTime[] = {0, 0};
+volatile unsigned int GeigerSensorThread::m_eventTime[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0 ,0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0 ,0 ,0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0 ,0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0 ,0 ,0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 ,0,  };
+volatile int GeigerSensorThread::m_timearrayctr[] = {0};
 
 // initialize geiger counter thread with the values of the interrupt pins each sensor is connected to
 GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2, int interruptPin3, int interruptPin4) : SensorThread::SensorThread("GEIGER", "C1,C2,GN") {
@@ -204,8 +207,11 @@ GeigerSensorThread::GeigerSensorThread(int interruptPin1, int interruptPin2, int
     m_eventCount[0] = 0;
     m_eventCount[1] = 0;
     m_eventCount[2] = 0;
-    m_eventTime[0] = 0;
-    m_eventTime[1] = 0;
+    for (int i = 0; i < 101; i++) {
+        m_eventTime[i] = 0;
+        
+    }
+    m_timearrayctr[0] = 0;
 
     pinMode(m_interruptPin[0], INPUT_PULLUP);
     pinMode(m_interruptPin[1], INPUT_PULLUP);
@@ -228,32 +234,61 @@ void GeigerSensorThread::readFromSensor() {
     sensorData.concat(",");
     sensorData.concat(String(m_eventCount[2]));
 
+    Serial.begin(9600);
+    if (!SD.begin(4)) {
+    // Serial.println("Card failed, or not present");
+    // don't do anything more:
+    // while (1);
+  }
+
+    File dataFile = SD.open("datalog.txt", FILE_WRITE);
+
+  // if the file is available, write to it:
+  if (dataFile) {
+    for (int j = 0; j < 99; j++) {
+        dataFile.print(m_eventTime[j]);
+        dataFile.print(" ");
+        m_eventTime[j] = 0;
+        
+    }
+    dataFile.print('\n');
+    
+    dataFile.close();
+    // print to the serial port too:
+    // Serial.println(dataString);
+  }
+
+  m_timearrayctr[0] = 0;
     // Reset counts
-    m_eventCount[0] = 0;
-    m_eventCount[1] = 0;
-    m_eventCount[2] = 0;
+    //m_eventCount[0] = 0;
+    //m_eventCount[1] = 0;
+    //m_eventCount[2] = 0;
 }
 
 // Interrupt Service Routine for a count event for Geiger Counter 1
 void GeigerSensorThread::ISR1() {
-    m_eventTime[0] = micros();
+    m_eventTime[m_timearrayctr[0]] = millis();
     m_eventCount[0]++; // add a count
+    m_timearrayctr[0]++;
     }
 
 // Interrupt Service Routine for a noise event for Geiger Counter 1
 void GeigerSensorThread::ISR2() {
     m_eventCount[0]--; // Remove a count as this count was likely noise
     m_eventCount[2]++;
+    m_timearrayctr[0]--;
 }
 
 // Interrupt Service Routine for a count event for Geiger Counter 2
 void GeigerSensorThread::ISR3() {
-    m_eventTime[1] = micros();
+    m_eventTime[m_timearrayctr[0]] = millis();
     m_eventCount[1]++;
+    m_timearrayctr[0]++;
     }
 
 // Interrupt Service Routine for a noise event for Geiger Counter 2
 void GeigerSensorThread::ISR4() {
     m_eventCount[1]--;
     m_eventCount[2]++;
+    m_timearrayctr[0]--;
 }

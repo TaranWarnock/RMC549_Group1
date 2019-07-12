@@ -139,9 +139,10 @@ class GeigerSensorThread : public SensorThread {
     public:
         // These variables must be static and volatile because they are used by
         // the interrupt service routines
-        static volatile int m_interruptPin[5];          // pins which trigger interrupts
+        static volatile int m_interruptPin[4];          // pins which trigger interrupts
         static volatile uint16_t m_eventCount[3];       // number of counts since last sample
-        static volatile unsigned long m_eventTime[2];   // timestamp of most recent count
+        static volatile unsigned int m_eventTime[101];   // timestamp of most recent count
+        static volatile int m_timearrayctr[1];
 
     public:
         GeigerSensorThread(int interruptPin1, int interruptPin2, int interruptPin3, int interruptPin4);
