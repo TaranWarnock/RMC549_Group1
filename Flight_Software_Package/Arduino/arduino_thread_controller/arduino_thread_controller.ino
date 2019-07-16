@@ -35,7 +35,7 @@ String ground_commands = "";
 // create thread for each sensor
 // SensorThread* gps_thread = new GPSSensorThread();
 // SensorThread* imu_thread = new IMUSensorThread(&bno);
-SensorThread* geiger_thread = new GeigerSensorThread(9, 10, 11, 12);
+SensorThread* geiger_thread = new GeigerSensorThread(10, 11, 12, 13);
 SensorThread* light_thread = new LightSensorThread();
 
 // create controller to hold the threads

@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <SD.h>
 
-const byte intPin[] = {9, 10, 11, 12};
+const byte intPin[] = {10, 11, 12, 13};
 uint32_t eventCount[] = {0, 0};
 unsigned int eventTime[1000] = { 0 };
 int timearrayctr = 0; 

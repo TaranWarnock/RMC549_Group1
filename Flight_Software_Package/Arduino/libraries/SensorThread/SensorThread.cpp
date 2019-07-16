@@ -264,7 +264,6 @@ void LightSensorThread::readFromSensor() {
 
   activated = true; // This has run once, tell it not to run again
 }
-
     Start3Light(); // Start sensors for integration
     while(true){
         now = millis();
@@ -286,7 +285,6 @@ void LightSensorThread::readFromSensor() {
             if ((BBLight3 == 65535) && (IRLight3 == 65535)){
                 light_sensor_3_error = true;
             }
-
             if (light_sensor_1_error == false) {
                 sensorData.concat(String(BBLight1));
                 sensorData.concat(",");
@@ -322,7 +320,7 @@ void LightSensorThread::readFromSensor() {
 LightSensorThread::LightSensorThread():SensorThread::SensorThread("LIGHT", "BBL1,IRL1,BBL2,IRL2,BBL3,IRL3") {
 
     // Prepare to connect to light sensors
-    pinMode(13, OUTPUT);
+    //pinMode(13, OUTPUT);
     Serial.begin(9600);
 
     // These must be instantiated both here and in the header file, or the compiler cannot find the correct library function
