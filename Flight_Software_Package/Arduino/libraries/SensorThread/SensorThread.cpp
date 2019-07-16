@@ -369,6 +369,11 @@ void GeigerSensorThread::readFromSensor() {
     sensorData.concat(",");
     sensorData.concat(String(m_eventCount[2]));
 
+    // Reset counts
+    m_eventCount[0] = 0; // Geiger counter 1
+    m_eventCount[1] = 0; // Geiger counter 2
+    m_eventCount[2] = 0; // Noise counts from both counters combined
+
     Serial.begin(9600);
     if (!SD.begin(4)) {
     // Serial.println("Card failed, or not present");
@@ -394,10 +399,7 @@ void GeigerSensorThread::readFromSensor() {
   }
 
   m_timearrayctr[0] = 0;
-    // Reset counts
-    //m_eventCount[0] = 0;
-    //m_eventCount[1] = 0;
-    //m_eventCount[2] = 0;
+
 }
 
 // Interrupt Service Routine for a count event for Geiger Counter 1
