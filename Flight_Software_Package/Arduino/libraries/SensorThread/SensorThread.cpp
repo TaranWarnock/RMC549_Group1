@@ -277,6 +277,16 @@ void LightSensorThread::readFromSensor() {
             lux2.readADC(&BBLight2, &IRLight2);
             lux3.readADC(&BBLight3, &IRLight3);
             interrupts();
+            if ((BBLight1 == 65535) && (IRLight1 == 65535)){
+                light_sensor_1_error = true;
+            }
+            if ((BBLight2 == 65535) && (IRLight2 == 65535)){
+                light_sensor_2_error = true;
+            }
+            if ((BBLight3 == 65535) && (IRLight3 == 65535)){
+                light_sensor_3_error = true;
+            }
+
             if (light_sensor_1_error == false) {
                 sensorData.concat(String(BBLight1));
                 sensorData.concat(",");
@@ -406,26 +416,34 @@ void GeigerSensorThread::readFromSensor() {
 void GeigerSensorThread::ISR1() {
     m_eventTime[m_timearrayctr[0]] = millis();
     m_eventCount[0]++; // add a count
-    m_timearrayctr[0]++;
+    if (m_timearrayctr[0] < 99){ // So as not to crash the program if there is a sudden burst of radiation and the array overflows
+            m_timearrayctr[0]++;
+        }
     }
 
 // Interrupt Service Routine for a noise event for Geiger Counter 1
 void GeigerSensorThread::ISR2() {
     m_eventCount[0]--; // Remove a count as this count was likely noise
     m_eventCount[2]++;
-    m_timearrayctr[0]--;
+    if (m_timearrayctr[0] > 1){ // So as not to crash the program if a ton of noise happens and it tries to go below 0
+        m_timearrayctr[0]--;
+    }
 }
 
 // Interrupt Service Routine for a count event for Geiger Counter 2
 void GeigerSensorThread::ISR3() {
     m_eventTime[m_timearrayctr[0]] = millis();
     m_eventCount[1]++;
-    m_timearrayctr[0]++;
+    if (m_timearrayctr[0] < 99){
+        m_timearrayctr[0]++;
+        }
     }
 
 // Interrupt Service Routine for a noise event for Geiger Counter 2
 void GeigerSensorThread::ISR4() {
     m_eventCount[1]--;
     m_eventCount[2]++;
-    m_timearrayctr[0]--;
+    if (m_timearrayctr[0] > 1){
+        m_timearrayctr[0]--;
+    }
 }
