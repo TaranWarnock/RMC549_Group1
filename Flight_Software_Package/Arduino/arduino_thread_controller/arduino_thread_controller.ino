@@ -13,7 +13,9 @@
 
 #include <SensorThread.h>     // library of customized threads for each sensor type
 #include <ThreadController.h> // use ThreadController to manage all sensor threads
-#include <RH_RF95.h>          // library for the LoRa transceiver
+#include <RH_RF95.h>   
+#include <Adafruit_Sensor.h>
+#include <Sydafruit_TSL2561_U.h>
 
 // Telemetry definitions
 #define RFM95_CS 5            // slave select pin
@@ -28,12 +30,13 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 String ground_commands = "";
 
 // create handlers for IMU and pressure sensor
-Adafruit_BNO055 bno = Adafruit_BNO055(55);
+//Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 // create thread for each sensor
-SensorThread* gps_thread = new GPSSensorThread();
-SensorThread* imu_thread = new IMUSensorThread(&bno);
-SensorThread* geiger_thread = new GeigerSensorThread(11, 12);
+// SensorThread* gps_thread = new GPSSensorThread();
+// SensorThread* imu_thread = new IMUSensorThread(&bno);
+SensorThread* geiger_thread = new GeigerSensorThread(9, 10, 11, 12);
+SensorThread* light_thread = new LightSensorThread();
 
 // create controller to hold the threads
 ThreadController controller = ThreadController();
@@ -60,7 +63,7 @@ void setup() {
   }
 
   // Initialize the IMU
-  doIMU = bno.begin();
+//   doIMU = bno.begin();
   if(!doIMU)
   {
     // could send an error message to the Pi here
@@ -85,10 +88,15 @@ void setup() {
   rf95.setTxPower(23, false);   // set power to maximum of 23 dBm
   delay(1000);
 
+  // set correct serial port to talk to Pi
+  // not related to telemetry
+  Serial.begin(115200);
+
   // add each thread to the controller
-  controller.add(gps_thread);
-  controller.add(imu_thread);
+  // controller.add(gps_thread);
+  // controller.add(imu_thread);
   controller.add(geiger_thread);
+  controller.add(light_thread);
 }
 
 void loop() {

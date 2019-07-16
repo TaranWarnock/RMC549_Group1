@@ -33,6 +33,9 @@
 #include <Thread.h>             // Arduino threading library
 #include <Adafruit_BNO055.h>    // IMU sensor library
 #include <utility/imumaths.h>   // used in IMU code to create vector objects
+#include <Adafruit_Sensor.h>    // General sensor library
+#include <Sydafruit_TSL2561_U.h> // Light sensor library
+#include <Wire.h>
 
 class SensorThread : public Thread {
     protected:
@@ -79,6 +82,41 @@ class GPSSensorThread : public SensorThread {
 
     public:
         GPSSensorThread() : SensorThread("GPS", "UTC,LtDgMn,NS,LnDgMn,EW,Nsat,Alt,Altu") {}
+};
+
+
+class LightSensorThread : public SensorThread {
+private:
+
+    // Time keeping
+    volatile unsigned long now = 0;
+    int cnt = 0;
+    int lt = 0;
+
+    // Light sensor value instantiation
+    uint16_t BBLight1 = 0;
+    uint16_t IRLight1 = 0;
+    uint16_t BBLight2 = 0;
+    uint16_t IRLight2 = 0;
+    uint16_t BBLight3 = 0;
+    uint16_t IRLight3 = 0;
+    int lightIntegrate = 0;
+    bool activated = false;
+
+    // Must be instantiated here and in the cpp file so that the compiler can find the correct library
+    Adafruit_TSL2561_Unified lux1 = Adafruit_TSL2561_Unified(TSL2561_ADDR_LOW, 12345);
+    Adafruit_TSL2561_Unified lux2 = Adafruit_TSL2561_Unified(TSL2561_ADDR_HIGH, 12346);
+    Adafruit_TSL2561_Unified lux3 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12347);
+
+    // Function for light sensor readings
+    void readFromSensor() override;
+
+    // Function to start all light sensors reading
+    int Start3Light();
+
+public:
+    LightSensorThread();
+
 };
 
 
@@ -133,16 +171,19 @@ class GeigerSensorThread : public SensorThread {
         // There is one for each geiger counter.
         static void ISR1();
         static void ISR2();
+        static void ISR3();
+        static void ISR4();
 
     public:
         // These variables must be static and volatile because they are used by
         // the interrupt service routines
-        static volatile int m_interruptPin[2];          // pins which trigger interrupts
+        static volatile int m_interruptPin[4];          // pins which trigger interrupts
         static volatile uint16_t m_eventCount[3];       // number of counts since last sample
-        static volatile unsigned long m_eventTime[2];   // timestamp of most recent count
+        static volatile unsigned int m_eventTime[101];   // timestamp of most recent count
+        static volatile int m_timearrayctr[1];
 
     public:
-        GeigerSensorThread(int interruptPin1, int interruptPin2);
+        GeigerSensorThread(int interruptPin1, int interruptPin2, int interruptPin3, int interruptPin4);
 
 };
 
