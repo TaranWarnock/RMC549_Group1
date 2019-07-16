@@ -207,7 +207,14 @@ void LightSensorThread::readFromSensor() {
     sensorData = ""; // Needed to clear data from last measurement
 
     tsl2561IntegrationTime_t timeSetting = TSL2561_INTEGRATIONTIME_13MS; //actually a bitwise command
-    //int i = 0;
+
+    // variables that check connection errors
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    bool light_sensor_1_error = false;
+    bool light_sensor_2_error = false;
+    bool light_sensor_3_error = false;
 
     // Don't need to run through this every time, just the first time
     // Ideally it would be in the creator class but it will freeze the code if placed there
@@ -215,10 +222,11 @@ void LightSensorThread::readFromSensor() {
     if (activated == false) { 
      while(true){
         if (!lux1.begin()) {  // Try to initialise the sensor
-            //i++;
-            //if (i>5){
-            //    break;
-            //}
+            i++; // if it fails, add a count
+            if (i>5){ // if it fails more than five times, there is a connection error. Log it and break.
+                light_sensor_1_error = true;
+                break;
+            }
             continue; // Not ready yet, try again
       } else {
             lux1.setGainTime(TSL2561_GAIN_1X, timeSetting); 
@@ -228,6 +236,11 @@ void LightSensorThread::readFromSensor() {
 
     while(true){
         if (!lux2.begin()) {  // Try to initialise the sensor
+            j++;
+            if (j>5){
+                light_sensor_2_error = true;
+                break;
+            }
             continue; // Not ready yet, try again
       } else {
             lux2.setGainTime(TSL2561_GAIN_1X, timeSetting); 
@@ -237,6 +250,11 @@ void LightSensorThread::readFromSensor() {
 
     while(true){
         if (!lux3.begin()) {  // Try to initialise the sensor
+            k++;
+            if (k>5){
+                light_sensor_3_error = true;
+                break;
+            }
             continue; // Not ready yet, try again
       } else {
             lux3.setGainTime(TSL2561_GAIN_1X, timeSetting); 
@@ -259,18 +277,33 @@ void LightSensorThread::readFromSensor() {
             lux2.readADC(&BBLight2, &IRLight2);
             lux3.readADC(&BBLight3, &IRLight3);
             interrupts();
-            sensorData.concat(String(BBLight1));
-            sensorData.concat(",");
-            sensorData.concat(String(IRLight1));
-            sensorData.concat(",");
-            sensorData.concat(String(BBLight2));
-            sensorData.concat(",");
-            sensorData.concat(String(IRLight2));
-            sensorData.concat(",");
-            sensorData.concat(String(BBLight3));
-            sensorData.concat(",");
-            sensorData.concat(String(IRLight3));
-            sensorData.concat(",");
+            if (light_sensor_1_error == false) {
+                sensorData.concat(String(BBLight1));
+                sensorData.concat(",");
+                sensorData.concat(String(IRLight1));
+                sensorData.concat(",");
+            }
+            else {
+                sensorData.concat("LIGHT_SENSOR_1_ERROR,LIGHT_SENSOR_1_ERROR,");
+            }
+            if (light_sensor_2_error == false) {
+                sensorData.concat(String(BBLight2));
+                sensorData.concat(",");
+                sensorData.concat(String(IRLight2));
+                sensorData.concat(",");
+            }
+            else {
+                sensorData.concat("LIGHT_SENSOR_2_ERROR,LIGHT_SENSOR_2_ERROR,");
+            }
+            if (light_sensor_3_error == false) {
+                sensorData.concat(String(BBLight3));
+                sensorData.concat(",");
+                sensorData.concat(String(IRLight3));
+                sensorData.concat(",");
+            }
+            else {
+                sensorData.concat("LIGHT_SENSOR_3_ERROR,LIGHT_SENSOR_3_ERROR,");
+            }
             break;
         }
     }
