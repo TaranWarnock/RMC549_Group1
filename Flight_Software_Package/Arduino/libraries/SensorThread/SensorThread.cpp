@@ -9,6 +9,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+#include <Adafruit_Sensor.h>
+#include <Sydafruit_TSL2561_U.h>
 
 // Generic function for sampling from a sensor
 void SensorThread::run() {
@@ -191,6 +193,106 @@ String IMUSensorThread::displayCalStatus(void) {
 
     return calString;
 }
+
+int LightSensorThread::Start3Light() {
+  // Tell the sensors to begin sensing
+  now = millis();
+  lux1.startCount(now);
+  lux2.startCount(now);
+  lux3.startCount(now);
+}
+
+void LightSensorThread::readFromSensor() {
+
+    sensorData = ""; // Needed to clear data from last measurement
+
+    tsl2561IntegrationTime_t timeSetting = TSL2561_INTEGRATIONTIME_13MS; //actually a bitwise command
+    //int i = 0;
+
+    // Don't need to run through this every time, just the first time
+    // Ideally it would be in the creator class but it will freeze the code if placed there
+    //(as it will not be able to find the sensors)
+    if (activated == false) { 
+     while(true){
+        if (!lux1.begin()) {  // Try to initialise the sensor
+            //i++;
+            //if (i>5){
+            //    break;
+            //}
+            continue; // Not ready yet, try again
+      } else {
+            lux1.setGainTime(TSL2561_GAIN_1X, timeSetting); 
+            break; // Initialization complete, break out to start next
+      }
+     }
+
+    while(true){
+        if (!lux2.begin()) {  // Try to initialise the sensor
+            continue; // Not ready yet, try again
+      } else {
+            lux2.setGainTime(TSL2561_GAIN_1X, timeSetting); 
+            break; // Initializion complete, break out to start next
+      }
+  }
+
+    while(true){
+        if (!lux3.begin()) {  // Try to initialise the sensor
+            continue; // Not ready yet, try again
+      } else {
+            lux3.setGainTime(TSL2561_GAIN_1X, timeSetting); 
+            break; // Initialization complete, ready to continue!
+      }
+  }
+
+  activated = true; // This has run once, tell it not to run again
+}
+
+    Start3Light(); // Start sensors for integration
+    while(true){
+        now = millis();
+        if (now - lux1._tsl2561Counting < lightIntegrate) {
+            continue; // Wait until the integration time has passed
+        } 
+        else { // Integration time has passed, grab data and send
+            noInterrupts(); //I don't know what happens if you interrupt a bitwise command to the cricuitry, let's not find out
+            lux1.readADC(&BBLight1, &IRLight1);
+            lux2.readADC(&BBLight2, &IRLight2);
+            lux3.readADC(&BBLight3, &IRLight3);
+            interrupts();
+            sensorData.concat(String(BBLight1));
+            sensorData.concat(",");
+            sensorData.concat(String(IRLight1));
+            sensorData.concat(",");
+            sensorData.concat(String(BBLight2));
+            sensorData.concat(",");
+            sensorData.concat(String(IRLight2));
+            sensorData.concat(",");
+            sensorData.concat(String(BBLight3));
+            sensorData.concat(",");
+            sensorData.concat(String(IRLight3));
+            sensorData.concat(",");
+            break;
+        }
+    }
+}
+
+LightSensorThread::LightSensorThread():SensorThread::SensorThread("LIGHT", "BBL1,IRL1,BBL2,IRL2,BBL3,IRL3") {
+
+    // Prepare to connect to light sensors
+    pinMode(13, OUTPUT);
+    Serial.begin(9600);
+
+    // These must be instantiated both here and in the header file, or the compiler cannot find the correct library function
+    // Don't ask me why
+     Adafruit_TSL2561_Unified lux1 = Adafruit_TSL2561_Unified(TSL2561_ADDR_LOW, 12345);
+     Adafruit_TSL2561_Unified lux2 = Adafruit_TSL2561_Unified(TSL2561_ADDR_HIGH, 12346);
+     Adafruit_TSL2561_Unified lux3 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12347);
+
+     // If necessary, change the integration time here
+     lightIntegrate = TSL2561_DELAY_INTTIME_13MS;
+     
+}
+
 
 // define static member variables for Geiger class
 volatile int GeigerSensorThread::m_interruptPin[] = {0, 0, 0, 0};
