@@ -259,3 +259,8 @@ void GeigerSensorThread::ISR2() {
         m_eventCount[1]++;
     }
 }
+
+void AmbientTempSensorThread::readFromSensor(){
+
+    
+};

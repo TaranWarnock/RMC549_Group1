@@ -33,6 +33,7 @@
 #include <Thread.h>             // Arduino threading library
 #include <Adafruit_BNO055.h>    // IMU sensor library
 #include <utility/imumaths.h>   // used in IMU code to create vector objects
+#include <Adafruit_MAX31865.h> // ambient temperature library
 
 class SensorThread : public Thread {
     protected:
@@ -144,6 +145,11 @@ class GeigerSensorThread : public SensorThread {
     public:
         GeigerSensorThread(int interruptPin1, int interruptPin2);
 
+};
+
+class AmbientTempSensorThread : public SensorThread{
+    private:
+        void readFromSensor() override;
 };
 
 #endif
