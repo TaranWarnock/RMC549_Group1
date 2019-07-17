@@ -33,7 +33,7 @@ String ground_commands = "";
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 // create thread for each sensor
-// SensorThread* gps_thread = new GPSSensorThread();
+SensorThread* gps_thread = new GPSSensorThread();
 SensorThread* imu_thread = new IMUSensorThread(&bno);
 SensorThread* geiger_thread = new GeigerSensorThread(10, 11, 12, 13);
 SensorThread* light_thread = new LightSensorThread();
@@ -93,7 +93,7 @@ void setup() {
   Serial.begin(115200);
 
   // add each thread to the controller
-  // controller.add(gps_thread);
+  controller.add(gps_thread);
   controller.add(imu_thread);
   controller.add(geiger_thread);
   controller.add(light_thread);
