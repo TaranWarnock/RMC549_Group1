@@ -30,11 +30,11 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 String ground_commands = "";
 
 // create handlers for IMU and pressure sensor
-//Adafruit_BNO055 bno = Adafruit_BNO055(55);
+Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 // create thread for each sensor
 // SensorThread* gps_thread = new GPSSensorThread();
-// SensorThread* imu_thread = new IMUSensorThread(&bno);
+SensorThread* imu_thread = new IMUSensorThread(&bno);
 SensorThread* geiger_thread = new GeigerSensorThread(10, 11, 12, 13);
 SensorThread* light_thread = new LightSensorThread();
 
@@ -63,7 +63,7 @@ void setup() {
   }
 
   // Initialize the IMU
-//   doIMU = bno.begin();
+  doIMU = bno.begin();
   if(!doIMU)
   {
     // could send an error message to the Pi here
@@ -94,7 +94,7 @@ void setup() {
 
   // add each thread to the controller
   // controller.add(gps_thread);
-  // controller.add(imu_thread);
+  controller.add(imu_thread);
   controller.add(geiger_thread);
   controller.add(light_thread);
 }
